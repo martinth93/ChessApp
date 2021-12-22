@@ -14,7 +14,7 @@ Also you can run a single `TestCase` or a single test method:
 
 **Running all tests:**
 
-You can also use [test discovery][2] which will discover and run all the tests for you, they must be modules or packages named `test*.py` (can be changed with the `-p, --pattern` flag):
+You can also use test discovery which will discover and run all the tests for you, they must be modules or packages named `test*.py` (can be changed with the `-p, --pattern` flag):
 
     $ cd ChessKI
     $ python -m unittest discover
