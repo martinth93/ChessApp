@@ -1,58 +1,49 @@
 class ChessBoard():
     """
     A class to represent a chessboard.
-
-    ...
-
-    Attributes:
-    -----------
-    size: tuple (int:n, int:m)
-        Grid-size of the chessboard (height n, width m)
-
-    Methods:
-    ----------
-    get_layout:
-        Returning a list with the color of each square on the chessboard.
-    __str__:
-        Displaying the chessboard.
-
-
     """
 
-    def __init__(self, size=(8, 8)):
-        """
-        Constructs a chessboard with all necessary information to display it.
-
-        Parameters:
-        ------------
-        size: tuple (int:n, int:m)
-            Grid-size of the chessboard (height n, width m).
-            Only accepting even numbers.
-
-        """
-
-        if size[0] % 2 == 0 and size[1] % 2 == 0:
-            self.size = size
+    def __init__(self, state=None):
+        if state == None:                # if state is not provided
+            self.initialize_state()
         else:
-            raise Exception("Invalid Size of Chessboard."
-                            "Please choose even numbers")
+            self.state = state
 
-    def get_layout(self):
+        self.size = (8, 8)
+
+    def initialize_state(self):
         """
-        Constructs a list for the colors of all grid-squares of the chessboard.
-
-        Parameters:
-        ----------
-        None
-
-        Returns:
-        ---------
-        The layout of the chessboard as list of rows, which are lists of
-        strings with "w" for white and "b" for black.
-
+        Initializes the state as an empty ChessBoard. Empty = None.
         """
 
-        layout = []
+        self.state = []
+        for _ in range(8):
+            row = [None,]*8
+            self.state.append(row)
+            # create 8x8 None Board (list([row0], [row1], ...))
 
-        while len(layout) < self.size[0]: # while chessboard not high enough
-            row1 = ["b", "w", "b"]
+    def remove_piece_from_state(self, piece_pos):
+        """
+        Replaces field at piece_pos (int:col, int:row) of the chessboard with "None"
+        """
+        row = piece_pos[0]
+        col = piece_pos[1]
+        self.state[row][col] = None
+
+    def place_piece_in_state(self, piece):
+        """
+        Places piece (instance of Piece or a Subclass like Pawn)
+        on field piece_pos (int:col, int:row) on the chessboard.
+        """
+        row = piece.position[0]
+        col = piece.position[1]
+        self.state[row][col] = piece
+
+    def piece_on_field(self, piece_pos):
+        """
+        Checks if a Piece is on a field.
+        If True returns the piece, if False returns None.
+        """
+        row = piece_pos[0]
+        col = piece_pos[1]
+        return self.state[row][col]
