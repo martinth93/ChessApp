@@ -51,7 +51,7 @@ class TestBoardSimple(unittest.TestCase):
         chessboard = ChessBoard()
         p1 = Pawn(position=(1, 3), color="w", chessboard=chessboard)
         # pawn placed on (1, 3)
-        chessboard.remove_piece_from_state(piece_pos=(1, 3))
+        chessboard.remove_piece_from_board(piece_pos=(1, 3))
         correct_state = [
                             [None, None, None, None, None, None, None, None],
                             [None, None, None, None, None, None, None, None],
@@ -75,7 +75,7 @@ class TestBoardSimple(unittest.TestCase):
         p1 = Pawn(position=(1, 3), color="w", chessboard=chessboard)
         # pawn placed on (1, 3)
         correct_piece = p1
-        generated_piece = chessboard.piece_on_field(piece_pos=(1, 3))
+        generated_piece = chessboard.return_piece_on_field(piece_pos=(1, 3))
         errormessage = f"generated piece not correct \n {generated_piece}"
         self.assertEqual(correct_piece, generated_piece, errormessage)
 

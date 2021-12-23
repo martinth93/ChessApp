@@ -9,8 +9,8 @@ To run a single test module, in this case `test_board.py`:
 
 Also you can run a single `TestCase` or a single test method:
 
-    $ python -m unittest tests.test_board.TestBoardSize
-    $ python -m unittest tests.test_antigravity.TestBoardSize.size_odd
+    $ python -m unittest tests.test_board.TestBoardSimple
+    $ python -m unittest tests.test_board.TestBoardSimple.test_initialize_state
 
 ## H2 **Running all tests:**
 
