@@ -1,0 +1,28 @@
+#:kivy 1.0.9
+
+ChessGame:
+
+<ChessGame>:
+
+    orientation: 'vertical'
+
+    Label:
+        text: 'The worst chess engine'
+        size_hint: 1, .1
+        font_size: max(15, self.height - dp(20)) # adjusting font size to window
+    RelativeLayout:
+        BoardLayout:
+            Image:
+                source: 'graphics/chessboard_and_pieces/chessboard.png'
+            BoardWidget:
+
+
+
+<BoardWidget>:
+    size_hint: None, None
+    size: self.parent.board_size
+    pos_hint: {'center_x': 0.5, 'center_y': .5}
+    padding: self.parent.board_padding
+    spacing: self.parent.board_spacing
+
+<BoardLayout>:
