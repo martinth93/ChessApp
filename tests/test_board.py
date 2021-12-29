@@ -183,7 +183,10 @@ class TestBoardKomplexPawn(unittest.TestCase):
         self.p8.move(new_pos=(3, 7))
         self.p8.move(new_pos=(4, 6))
         self.p7.move(new_pos=(3, 6))
-        self.p7.move(new_pos=(4, 6)) # illegal move! already occupied by p8
+
+        with self.assertRaises(ValueError) as e:
+            self.p7.move(new_pos=(4, 6)) # illegal move! already occupied by p8
+        self.assertEqual(str(e.exception), 'Move not possible.')
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
@@ -211,11 +214,18 @@ class TestBoardKomplexPawn(unittest.TestCase):
         self.p8.move(new_pos=(3, 7))
         self.p8.move(new_pos=(4, 6))
         self.p7.move(new_pos=(3, 6))
-        self.p7.move(new_pos=(4, 6)) # illegal move! already occupied by p8
+
+        with self.assertRaises(ValueError) as e:
+            self.p7.move(new_pos=(4, 6)) # illegal move! already occupied by p8
+        self.assertEqual(str(e.exception), 'Move not possible.')
+
         self.p8.move(new_pos=(5, 6))
         self.p8.move(new_pos=(6, 6))
         self.p8.move(new_pos=(7, 6))
-        self.p8.move(new_pos=(8, 6)) # illegal move! out of board
+
+        with self.assertRaises(ValueError) as e:
+            self.p8.move(new_pos=(8, 6)) # illegal move! out of board
+        self.assertEqual(str(e.exception), 'Move not possible.')
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
