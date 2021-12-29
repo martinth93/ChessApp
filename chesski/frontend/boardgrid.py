@@ -10,6 +10,12 @@ class BoardGrid(GridLayout):
         self.init_board()
 
     def init_board(self):
+        """
+        Creating a 8x8 grid of boxlayouts, the size of the displayed
+        chessboard graphic.
+        Dropping a piece inside one of the grid-fields, snaps the piece
+        to the middle of the field.
+        """
         for row in range(7 ,-1, -1): # row 0 at bottom
             row_fields = []
             for col in range(8):

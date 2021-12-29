@@ -61,11 +61,11 @@ class TestBishop(TestPiece):
         self._test_move(piece_type=Bishop, piece_pos=(1, 1), piece_color='w',
                         piece_move=(2, 1), piece_output='w-B-b2',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move bishop like that.')
         self._test_move(piece_type=Bishop, piece_pos=(0, 0), piece_color='b',
                         piece_move=(1, 0), piece_output='b-B-a1',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move bishop like that.')
 
     def test_move_is_illegal_diagonal_pawn_between(self):
         """
@@ -76,12 +76,12 @@ class TestBishop(TestPiece):
                         piece_move=(1, 1), piece_output='w-B-h8',
                         piece2_type=Pawn, piece2_pos=(2, 2), piece2_color='b',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move bishop like that.')
         self._test_move(piece_type=Bishop, piece_pos=(0, 0), piece_color='b',
                         piece_move=(5, 5), piece_output='b-B-a1',
                         piece2_type=Pawn, piece2_pos=(3, 3), piece2_color='w',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move bishop like that.')
 
     def test_move_is_illegal_take_own_knight(self):
         """
@@ -92,9 +92,9 @@ class TestBishop(TestPiece):
                         piece_move=(1, 1), piece_output='w-B-h8',
                         piece2_type=Knight, piece2_pos=(1, 1), piece2_color='w',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Field blocked by another same-colored piece.')
         self._test_move(piece_type=Bishop, piece_pos=(0, 0), piece_color='b',
                         piece_move=(3, 3), piece_output='b-B-a1',
                         piece2_type=Knight, piece2_pos=(3, 3), piece2_color='b',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Field blocked by another same-colored piece.')

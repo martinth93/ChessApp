@@ -124,10 +124,10 @@ class TestBoardKomplexPawn(unittest.TestCase):
         """
         Testing if moving a pawn correctly effects the state.
         """
-        self.p4.move(new_pos=(3, 3))
-        self.p5.move(new_pos=(2, 4))
-        self.p15.move(new_pos=(4, 6))
-        self.p16.move(new_pos=(5, 7))
+        self.p4.move(end_pos=(3, 3))
+        self.p5.move(end_pos=(2, 4))
+        self.p15.move(end_pos=(4, 6))
+        self.p16.move(end_pos=(5, 7))
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
@@ -148,13 +148,13 @@ class TestBoardKomplexPawn(unittest.TestCase):
         Testing if moving a pawn taking an opponents pawn (p8 taking p16)
         correctly effects the state.
         """
-        self.p4.move(new_pos=(3, 3))
-        self.p5.move(new_pos=(2, 4))
-        self.p15.move(new_pos=(4, 6))
-        self.p16.move(new_pos=(5, 7))
+        self.p4.move(end_pos=(3, 3))
+        self.p5.move(end_pos=(2, 4))
+        self.p15.move(end_pos=(4, 6))
+        self.p16.move(end_pos=(5, 7))
 
-        self.p8.move(new_pos=(3, 7))
-        self.p8.move(new_pos=(4, 6)) # p8 taking p15!
+        self.p8.move(end_pos=(3, 7))
+        self.p8.move(end_pos=(4, 6)) # p8 taking p15!
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
@@ -175,18 +175,18 @@ class TestBoardKomplexPawn(unittest.TestCase):
         Testing if moving a pawn on field of already occupied field by another
         pawn correctly effects the state.
         """
-        self.p4.move(new_pos=(3, 3))
-        self.p5.move(new_pos=(2, 4))
-        self.p15.move(new_pos=(4, 6))
-        self.p16.move(new_pos=(5, 7))
+        self.p4.move(end_pos=(3, 3))
+        self.p5.move(end_pos=(2, 4))
+        self.p15.move(end_pos=(4, 6))
+        self.p16.move(end_pos=(5, 7))
 
-        self.p8.move(new_pos=(3, 7))
-        self.p8.move(new_pos=(4, 6))
-        self.p7.move(new_pos=(3, 6))
+        self.p8.move(end_pos=(3, 7))
+        self.p8.move(end_pos=(4, 6))
+        self.p7.move(end_pos=(3, 6))
 
         with self.assertRaises(ValueError) as e:
-            self.p7.move(new_pos=(4, 6)) # illegal move! already occupied by p8
-        self.assertEqual(str(e.exception), 'Move not possible.')
+            self.p7.move(end_pos=(4, 6)) # illegal move! already occupied by p8
+        self.assertEqual(str(e.exception), 'Move failed: Field blocked by another same-colored piece.')
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
@@ -206,26 +206,26 @@ class TestBoardKomplexPawn(unittest.TestCase):
         """
         Testing if moving a pawn off the field correctly effects the state.
         """
-        self.p4.move(new_pos=(3, 3))
-        self.p5.move(new_pos=(2, 4))
-        self.p15.move(new_pos=(4, 6))
-        self.p16.move(new_pos=(5, 7))
+        self.p4.move(end_pos=(3, 3))
+        self.p5.move(end_pos=(2, 4))
+        self.p15.move(end_pos=(4, 6))
+        self.p16.move(end_pos=(5, 7))
 
-        self.p8.move(new_pos=(3, 7))
-        self.p8.move(new_pos=(4, 6))
-        self.p7.move(new_pos=(3, 6))
-
-        with self.assertRaises(ValueError) as e:
-            self.p7.move(new_pos=(4, 6)) # illegal move! already occupied by p8
-        self.assertEqual(str(e.exception), 'Move not possible.')
-
-        self.p8.move(new_pos=(5, 6))
-        self.p8.move(new_pos=(6, 6))
-        self.p8.move(new_pos=(7, 6))
+        self.p8.move(end_pos=(3, 7))
+        self.p8.move(end_pos=(4, 6))
+        self.p7.move(end_pos=(3, 6))
 
         with self.assertRaises(ValueError) as e:
-            self.p8.move(new_pos=(8, 6)) # illegal move! out of board
-        self.assertEqual(str(e.exception), 'Move not possible.')
+            self.p7.move(end_pos=(4, 6)) # illegal move! already occupied by p8
+        self.assertEqual(str(e.exception), 'Move failed: Field blocked by another same-colored piece.')
+
+        self.p8.move(end_pos=(5, 6))
+        self.p8.move(end_pos=(6, 6))
+        self.p8.move(end_pos=(7, 6))
+
+        with self.assertRaises(ValueError) as e:
+            self.p8.move(end_pos=(8, 6)) # illegal move! out of board
+        self.assertEqual(str(e.exception), 'Move failed: New position out of board.')
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],

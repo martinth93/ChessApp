@@ -8,33 +8,41 @@ class ChessPiece(DragBehavior, Image):
     def __init__(self, board, type, graphics_path, coordinates,
                  match_controller, **kwargs):
         super().__init__(**kwargs)
-        self.opacity = 0
-        self.size_hint = (.08, .08)
-        self.drag_distance = dp(1)
+
         self.board = board
-        self.drag_rectangle = (self.board.x, self.board.y,
-                               self.board.width, self.board.height)
-        self.source = graphics_path + f'/chessboard_and_pieces/{type}.png'
-        self.starting_coordinates = coordinates
-        self.last_coordinates = coordinates
         self.match_controller = match_controller
 
-        # workaround for image appearing at 0,0 when first instantiated
+        self.drag_rectangle = (self.board.x, self.board.y,
+                               self.board.width, self.board.height)
+
+        self.source = graphics_path + f'/chessboard_and_pieces/{type}.png'
+
+        self.starting_coordinates = coordinates
+        self.last_coordinates = coordinates
+        self.getting_dragged = False
+
         Clock.schedule_once(self.turn_visible, .3)
 
+    def update_while_dragging(self, dt):
+        self.stay_on_board()
+
     def turn_visible(self, dt):
+        """
+        workaround for image appearing at 0,0 when first instantiated
+        """
         self.move_to_coordinates(self.starting_coordinates)
         self.opacity=1
 
 
     def on_touch_down(self, touch):
-        Clock.schedule_interval(self.update, 1/60.0)
+        """
+        if start dragging start function schedule to keep piece on board.
+        """
+        if self.collide_point(*touch.pos): # start only for clicked piece
+            Clock.schedule_interval(self.update_while_dragging, 1/60.0)
+            self.getting_dragged = True
 
         super(ChessPiece, self).on_touch_down(touch)
-
-    def update(self, dt):
-        self.stay_on_board()
-        # print('update')
 
 
     def stay_on_board(self):
@@ -65,26 +73,36 @@ class ChessPiece(DragBehavior, Image):
         return None
 
     def on_touch_up(self, touch):
-        if self.collide_point(*touch.pos):
+        """
+        if stop dragging stop function schedule to keep piece on board.
+        """
+        if self.getting_dragged: # only for clicked piece
             next_coordinates = self.get_nearest_coordinates()
+            move = (self.last_coordinates, next_coordinates)
 
             if (next_coordinates != None and
-            self.match_controller.move_was_possible(self.last_coordinates,
-                                                next_coordinates)):
+                self.match_controller.move_was_possible(*move)):
                 self.move_to_coordinates(next_coordinates)
-                print('move made!')
-            else:
+                print('move made!', next_coordinates)
+
+            else: # move back
                 self.move_to_coordinates(self.last_coordinates)
+                print('could not make move')
 
-        Clock.unschedule(self.update)
+            # stop function schedule to keep piece on board
+            Clock.unschedule(self.update_while_dragging)
 
+            self.getting_dragged = False
         super(ChessPiece,self).on_touch_up(touch)
 
-    def move_to_coordinates(self, next_coordinates):
-
-        row = next_coordinates[0]
-        col = next_coordinates[1]
+    def move_to_coordinates(self, coordinates):
+        """
+        Move this Piece (Gui-Element) to given coordinates.
+        Update coordinates attribute.
+        """
+        row = coordinates[0]
+        col = coordinates[1]
         self.center_x = self.board.fields[row][col].center_x
         self.center_y = self.board.fields[row][col].center_y
-        self.last_coordinates = next_coordinates
-        print('moved to coordinates: ', next_coordinates)
+        self.last_coordinates = coordinates
+        print('moved to coordinates: ', coordinates)

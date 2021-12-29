@@ -16,9 +16,15 @@ class MainLayout(BoxLayout):
 
 
     def start_game(self):
+        """
+        Button Function to start or reset the game.
+        """
+        # remove all remaining gui-pieces
         if self.piece_widgets:
             self.ids.game_box.clear_widgets(self.piece_widgets)
             self.piece_widgets = []
+
+        # notify the match controller to start backend-match
         self.match_controller.init_match()
 
         # setup pieces
@@ -40,6 +46,9 @@ class MainLayout(BoxLayout):
         self.start_reset_button_text = 'Reset'
 
     def remove_piece(self, coordinates):
+        """
+        Removes a piece on a given coordiante.
+        """
         print('removing piece')
         for i in range(len(self.piece_widgets)):
             print('checking piece ', i)

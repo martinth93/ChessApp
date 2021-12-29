@@ -33,23 +33,24 @@ class Piece():
         """
         return f"{self.color}-{self.Abbrevation}-{self.get_position()}"
 
-    def move(self, new_pos):
+    def move(self, end_pos):
         """
         Updates position if move is legal.
+        If illegal Error is being raised.
         """
+        self.check_general_illegal_move(end_pos)
+        self.check_piece_rules(end_pos)
 
-        if self.move_is_legal(new_pos):
         # if move is legal according to general and piece-specific rules -
         # move piece and eventually remove opponents piece
-            self.chessboard.remove_piece_from_board(new_pos)
-            self.chessboard.remove_piece_from_board(self.position)
-            self.position = new_pos
-            self.chessboard.place_piece_on_board(self)
-            return True
-        else:
-            raise ValueError('Move not possible.')
+        self.chessboard.remove_piece_from_board(end_pos)
+        self.chessboard.remove_piece_from_board(self.position)
+        self.position = end_pos
+        self.chessboard.place_piece_on_board(self)
 
-    def general_illegal_move(self, new_pos):
+        return True
+
+    def check_general_illegal_move(self, end_pos):
         """
         Checking if a move is illegal, according to general rules that are equal
         to all pieces.
@@ -58,25 +59,23 @@ class Piece():
         Move to a field where if there is already one of your
         pieces (Except castling).
         """
-        if new_pos == self.position:
-            return True
-            # didn't move! new_position was old position
+        if end_pos == self.position:
+            raise ValueError('Move failed: Piece already on new position.')
+            # didn't move! end_position was old position
 
-        if (new_pos[1] < 0 or new_pos[1] > 7 or
-            new_pos[0] < 0 or new_pos[0] > 7):
-            return True
+        if (end_pos[1] < 0 or end_pos[1] > 7 or
+            end_pos[0] < 0 or end_pos[0] > 7):
+            raise ValueError('Move failed: New position out of board.')
             # If out of board
 
-        piece_to_remove = self.chessboard.return_piece_on_field(new_pos)
-        # Checking if there is a piece on new_pos
+        piece_to_remove = self.chessboard.return_piece_on_field(end_pos)
+        # Checking if there is a piece on end_pos
 
         if piece_to_remove != None:
             if piece_to_remove.color == self.color:
-                return True
+                raise ValueError('Move failed: Field blocked by another same-colored piece.')
                 # if trying to move on field with own piece on it
                 # Castling?
-
-        return False # no rulebreak found
 
 
 # ----------------------------- Classes of Chess Pieces -----------------------
@@ -91,27 +90,20 @@ class Pawn(Piece):
         super().__init__(position, color, chessboard)
         self.Abbrevation = "P"
 
-    def move_is_legal(self, new_pos):
+    def check_piece_rules(self, end_pos):
         """
         Returning True if moving pawn in specified way is allowed.
         Wether endfield is already occupied with own piece is checked in
         Piece Class.
-
-        Parameters:
-                    new_pos: (int:row, int:col)   new position of piece
-                    chessboard: ChessBoard        current chessboard of piece
         """
-        if self.general_illegal_move(new_pos):
-            return False
-
         one_field = 1
         if not self.is_white():         # white pawns can only go up
             one_field = -1              # black pawns can only go down
 
-        direction = tuple(map(lambda i, j: i - j, new_pos, self.position))
+        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
         # how many fields up/down left/rigth
 
-        if self.chessboard.return_piece_on_field(new_pos) == None:
+        if self.chessboard.return_piece_on_field(end_pos) == None:
         # if new field does not have a piece on it
 
             if direction == (one_field, 0):
@@ -120,12 +112,12 @@ class Pawn(Piece):
                 # in same column
 
             elif (direction == (2 * one_field, 0) and
-                self.position[0] == ((7 + one_field) % 7) and
-                self.chessboard.return_piece_on_field(piece_pos =
-                (self.position[0] + one_field, self.position[1])) == None):
-                 return True
-                 # if moved two fields up/down from starting position (legal)
-                 # and no piece is inbetween old and new position
+                self.position[0] == ((7 + one_field) % 7)):
+                if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
+                    return True
+                    # returns True if no pieces between start and endposition
+                else:
+                    raise ValueError('Move failed: Cannot move pawn like that.')
 
         else:
         # if new field does have a piece on it
@@ -135,8 +127,7 @@ class Pawn(Piece):
                # if moved one to the site
                # and 1 up (if white) / 1 down (if black) (diagonal, legal)
 
-
-        return False   # if no legal move was matched
+        raise ValueError('Move failed: Cannot move pawn like that.')
 
 
 class Rook(Piece):
@@ -148,28 +139,24 @@ class Rook(Piece):
         super().__init__(position, color, chessboard)
         self.Abbrevation = "R"
 
-    def move_is_legal(self, new_pos):
+    def check_piece_rules(self, end_pos):
         """
         Returning True if moving rook in specified way is allowed.
         Wether endfield is already occupied with own piece is checked in
         Piece Class.
-
-        Parameters:
-                    new_pos: (int:row, int:col)   new position of piece
         """
-        if self.general_illegal_move(new_pos):
-            return False
-
-        direction = tuple(map(lambda i, j: i - j, new_pos, self.position))
+        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
         # how many fields up/down left/rigth
 
         if direction[0] == 0 or direction[1] == 0:  # only along row or column
-            return self.chessboard.no_pieces_between(start_pos=self.position,
-                                                     end_pos = new_pos)
-            # returns True if no pieces between start and end, otherwise False
+            if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
+                return True
+                # returns True if no pieces between start and endposition
+            else:
+                raise ValueError('Move failed: Cannot move rook like that.')
 
-        else: # not moved diagonally
-            return False
+        else: # not moved vetical/horizontal
+            raise ValueError('Move failed: Cannot move rook like that.')
 
 
 class Knight(Piece):
@@ -181,19 +168,13 @@ class Knight(Piece):
         super().__init__(position, color, chessboard)
         self.Abbrevation = "N"
 
-    def move_is_legal(self, new_pos):
+    def check_piece_rules(self, end_pos):
         """
         Returning True if moving knight in specified way is allowed.
         Wether endfield is already occupied with own piece is checked in
         Piece Class.
-
-        Parameters:
-                    new_pos: (int:row, int:col)   new position of piece
         """
-        if self.general_illegal_move(new_pos):
-            return False
-
-        direction = tuple(map(lambda i, j: i - j, new_pos, self.position))
+        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
         # how many fields up/down left/rigth
 
         possible_directions_set = {1, 2}
@@ -205,7 +186,7 @@ class Knight(Piece):
             return True
 
         else: # no legal move found
-            return False
+            raise ValueError('Move failed: Cannot move knight like that.')
 
 
 class Bishop(Piece):
@@ -217,29 +198,25 @@ class Bishop(Piece):
         super().__init__(position, color, chessboard)
         self.Abbrevation = "B"
 
-    def move_is_legal(self, new_pos):
+    def check_piece_rules(self, end_pos):
         """
         Returning True if moving a Bishop in specified way is allowed.
         Wether endfield is already occupied with own piece is checked in
         Piece Class.
-
-        Parameters:
-                    new_pos: (int:row, int:col)   new position of piece
         """
-        if self.general_illegal_move(new_pos):
-            return False
-
-        direction = tuple(map(lambda i, j: i - j, new_pos, self.position))
+        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
         # how many fields up/down left/rigth
 
         if abs(direction[0]) == abs(direction[1]):
         # only diagonal moves allowed
-            return self.chessboard.no_pieces_between(start_pos=self.position,
-                                                     end_pos = new_pos)
-            # returns True if no pieces between start and end, otherwise False
+            if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
+                return True
+                # returns True if no pieces between start and endposition
+            else:
+                raise ValueError('Move failed: Cannot move bishop like that.')
 
         else: # not moved diagonally
-            return False
+            raise ValueError('Move failed: Cannot move bishop like that.')
 
 
 class Queen(Piece):
@@ -251,30 +228,26 @@ class Queen(Piece):
         super().__init__(position, color, chessboard)
         self.Abbrevation = "Q"
 
-    def move_is_legal(self, new_pos):
+    def check_piece_rules(self, end_pos):
         """
         Returning True if moving Queen in specified way is allowed.
         Wether endfield is already occupied with own piece is checked in
         Piece Class.
-
-        Parameters:
-                    new_pos: (int:row, int:col)   new position of piece
         """
-        if self.general_illegal_move(new_pos):
-            return False
-
-        direction = tuple(map(lambda i, j: i - j, new_pos, self.position))
+        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
         # how many fields up/down left/rigth
 
         if (abs(direction[0]) == abs(direction[1]) or
             direction[0] == 0 or direction[1] == 0):
         # only diagonal/vertical and horizontal moves allowed
-            return self.chessboard.no_pieces_between(start_pos=self.position,
-                                                     end_pos = new_pos)
-            # returns True if no pieces between start and endposition
+            if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
+                return True
+                # returns True if no pieces between start and endposition
+            else:
+                raise ValueError('Move failed: Cannot move queen like that.')
 
         else: # not moved diagonally
-            return False
+            raise ValueError('Move failed: Cannot move queen like that.')
 
 class King(Piece):
     """
@@ -285,19 +258,13 @@ class King(Piece):
         super().__init__(position, color, chessboard)
         self.Abbrevation = "K"
 
-    def move_is_legal(self, new_pos):
+    def check_piece_rules(self, end_pos):
         """
         Returning True if moving the King in specified way is allowed.
         Wether endfield is already occupied with own piece is checked in
         Piece Class.
-
-        Parameters:
-                    new_pos: (int:row, int:col)   new position of piece
         """
-        if self.general_illegal_move(new_pos):
-            return False
-
-        direction = tuple(map(lambda i, j: i - j, new_pos, self.position))
+        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
         # how many fields up/down left/rigth
 
         if abs(direction[0]) < 2 and abs(direction[1]) < 2:
@@ -305,4 +272,4 @@ class King(Piece):
             # king can move in any of the 8 squares surrounding him
 
         else: # moved to far
-            return False
+            raise ValueError('Move failed: Cannot move king like that.')

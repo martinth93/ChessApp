@@ -6,8 +6,7 @@ from chesski.backend.game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 
 class Match():
     """
-    A class setting up Board and Pieces and Managing Moves and displays during
-    a match.
+    A class setting up Board and Pieces and Managing Moves.
     """
 
     def __init__(self, chessboard=None, which_players_turn = 'w'):
@@ -18,7 +17,6 @@ class Match():
         if chessboard is None:
             self.chessboard = ChessBoard()  # create a new chessboard
             self.initialize_pieces()  # create all necessary pieces
-
 
 
     def initialize_pieces(self):
@@ -51,9 +49,8 @@ class Match():
 
     def translate_from_notation(self, move):
         """
-        Translates move form common chess notation into usable form for
-        this application.
-        Returns which piece where to move.
+        Translates move form common chess notation into coordinates.
+        Returns coordinate of piece to move and coordinate of field to move to.
         """
         letters = "abcdefgh"
         piece_to_move = None
@@ -69,9 +66,6 @@ class Match():
             end_col = letters.index(move[-2])
             end_row = int(move[-1]) - 1
             piece_abbrevation = "P"
-
-
-
 
         if move[0].isupper():  # Piece move, eg. Ne4, Kg4, Rfe4, Rxe3, Rh4xg6
             end_col = letters.index(move[-2])
@@ -99,7 +93,7 @@ class Match():
                     if piece.position[0] != start_row:
                         continue
 
-                if piece.move_is_legal(new_pos=(end_row, end_col)):
+                if piece.move_is_legal(end_pos=(end_row, end_col)):
                     piece_to_move = piece
                     possible_pieces += 1
 
@@ -115,41 +109,48 @@ class Match():
         """
         Function handling the moves given as string in common chess notation
         or coordinate-tuple.
+
+        If move allowed: return: True,
+
+        If move is not allowed, ValueError with further specification is raised.
         """
-        old_pos, new_pos = None, None
-        if in_notation:
-            old_pos, new_pos = self.translate_from_notation(move)
-        else:
-            old_pos = move[0]
-            new_pos = move[1]
-
-        piece = self.chessboard.return_piece_on_field(old_pos)
-
+        start_pos, end_pos = None, None
         need_to_remove_piece = False
-        if self.chessboard.return_piece_on_field(new_pos):
+
+        # get coordinates of startfield and endfield
+        if in_notation:
+            start_pos, end_pos = self.translate_from_notation(move)
+        else:
+            start_pos = move[0]
+            end_pos = move[1]
+
+        # get piece on start_position
+        piece = self.chessboard.return_piece_on_field(start_pos)
+
+        # change flag if piece on end_field
+        if self.chessboard.return_piece_on_field(end_pos):
             need_to_remove_piece = True
 
         player = piece.color
-
-        if player == self.which_players_turn:
-            if piece.move(new_pos=new_pos):         # if move succesfull
-                if player == "w":                   # change player turn
-                    self.which_players_turn = "b"
-                else:
-                    self.which_players_turn = "w"
-                print(self.display_board())
-                # move worked, piece needs to be removed
-                return True, need_to_remove_piece
-
-
-
-        else:
+        # check if right player makes turn
+        if player != self.which_players_turn:
             raise ValueError(f"{self.which_players_turn} has to move!")
+
+        # make move if succesfull
+        if piece.move(end_pos=end_pos):
+            # change player turn
+            if player == "w":
+                self.which_players_turn = "b"
+            else:
+                self.which_players_turn = "w"
+            # print(self.display_board())
+            return True, need_to_remove_piece
+            # move worked, piece that needs to be removed
 
 
     def display_board(self):
         """
-        Displays the chessboard with pieces on it as numpy array.
+        Displays the chessboard with pieces on it as numpy array in terminal.
 
         "O" for empty white field
         "X" for empty black field
@@ -182,11 +183,8 @@ class Match():
                         displayed = " O "
                 else:
                     displayed = f"{piece.Abbrevation}-{piece.color}"
-
                 displayed_row.append(displayed)
-
             full_board.append(displayed_row)
-
         full_board.reverse()
 
         return(np.array(full_board))

@@ -62,11 +62,11 @@ class TestKnight(TestPiece):
         self._test_move(piece_type=Knight, piece_pos=(4, 4), piece_color='w',
                         piece_move=(6, 4), piece_output='w-N-e5',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move knight like that.')
         self._test_move(piece_type=Knight, piece_pos=(4, 3), piece_color='b',
                         piece_move=(2, 3), piece_output='b-N-d5',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move knight like that.')
 
     def test_move_is_illegal_diagonal(self):
         """
@@ -76,11 +76,11 @@ class TestKnight(TestPiece):
         self._test_move(piece_type=Knight, piece_pos=(4, 4), piece_color='w',
                         piece_move=(5, 5), piece_output='w-N-e5',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move knight like that.')
         self._test_move(piece_type=Knight, piece_pos=(4, 3), piece_color='b',
                         piece_move=(3, 2), piece_output='b-N-d5',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move knight like that.')
 
     def test_move_is_illegal_take_own_rook(self):
         """
@@ -91,9 +91,9 @@ class TestKnight(TestPiece):
                         piece_move=(2, 5), piece_output='w-N-g1',
                         piece2_type=Rook, piece2_pos=(2, 5), piece2_color='w',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Field blocked by another same-colored piece.')
         self._test_move(piece_type=Knight, piece_pos=(4, 4), piece_color='b',
                         piece_move=(6, 5), piece_output='b-N-e5',
                         piece2_type=Rook, piece2_pos=(6, 5), piece2_color='b',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Field blocked by another same-colored piece.')

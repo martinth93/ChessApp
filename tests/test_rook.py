@@ -113,11 +113,11 @@ class TestRook(TestPiece):
         self._test_move(piece_type=Rook, piece_pos=(0, 7), piece_color='w',
                         piece_move=(0, 8), piece_output='w-R-h1',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: New position out of board.')
         self._test_move(piece_type=Rook, piece_pos=(0, 0), piece_color='b',
                         piece_move=(-1, 0), piece_output='b-R-a1',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: New position out of board.')
 
     def test_move_is_illegal_diagonal(self):
         """
@@ -127,11 +127,11 @@ class TestRook(TestPiece):
         self._test_move(piece_type=Rook, piece_pos=(4, 4), piece_color='w',
                         piece_move=(5, 5), piece_output='w-R-e5',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move rook like that.')
         self._test_move(piece_type=Rook, piece_pos=(4, 4), piece_color='b',
                         piece_move=(3, 3), piece_output='b-R-e5',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move rook like that.')
 
     def test_move_is_illegal_taking_own_pawn(self):
         """
@@ -142,12 +142,12 @@ class TestRook(TestPiece):
                         piece_move=(4, 2), piece_output='w-R-e5',
                         piece2_type=Pawn, piece2_pos=(4, 2), piece2_color='w',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Field blocked by another same-colored piece.')
         self._test_move(piece_type=Rook, piece_pos=(4, 3), piece_color='b',
                         piece_move=(3, 3), piece_output='b-R-d5',
                         piece2_type=Pawn, piece2_pos=(3, 3), piece2_color='b',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Field blocked by another same-colored piece.')
 
     def test_move_is_illegal_piece_inbetween_vertical(self):
         """
@@ -158,9 +158,9 @@ class TestRook(TestPiece):
                         piece_move=(4, 2), piece_output='w-R-e5',
                         piece2_type=Pawn, piece2_pos=(4, 3), piece2_color='b',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move rook like that.')
         self._test_move(piece_type=Rook, piece_pos=(4, 3), piece_color='b',
                         piece_move=(1, 3), piece_output='b-R-d5',
                         piece2_type=Pawn, piece2_pos=(3, 3), piece2_color='w',
                         expected_error=ValueError,
-                        expected_msg='Move not possible.')
+                        expected_msg='Move failed: Cannot move rook like that.')

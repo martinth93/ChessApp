@@ -25,12 +25,12 @@ class TestPiece(unittest.TestCase):
         if piece_move:
             if expected_error:     # check error
                 with self.assertRaises(expected_error) as e:
-                    piece.move(new_pos=piece_move)
+                    piece.move(end_pos=piece_move)
 
                 expected_msg = expected_msg
                 self.assertEqual(str(e.exception), expected_msg)
             else:
-                piece.move(new_pos=piece_move)
+                piece.move(end_pos=piece_move)
 
         generated_output = piece.display()
         self.assertEqual(piece_output, generated_output)
