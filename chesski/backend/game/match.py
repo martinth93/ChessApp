@@ -108,22 +108,40 @@ class Match():
         elif piece_to_move == None:
             raise ValueError(f"found no possibilities, check notation!")
         else:
-            return piece_to_move, (end_row, end_col)
+            return piece_to_move.position, (end_row, end_col)
             # No Issue found
 
-    def make_a_move(self, player, move_in_notation):
+    def make_a_move(self, move, in_notation=False):
         """
-        Function handling the moves given as string in common chess notation.
+        Function handling the moves given as string in common chess notation
+        or coordinate-tuple.
         """
-        if player == self.which_players_turn:
-            piece, new_pos = self.translate_from_notation(move_in_notation)
-            piece.move(new_pos=new_pos)
-            if player == "w":                   # change player turn
-                self.which_players_turn = "b"
-            else:
-                self.which_players_turn = "w"
+        old_pos, new_pos = None, None
+        if in_notation:
+            old_pos, new_pos = self.translate_from_notation(move)
+        else:
+            old_pos = move[0]
+            new_pos = move[1]
 
-            print(self.display_board())
+        piece = self.chessboard.return_piece_on_field(old_pos)
+
+        need_to_remove_piece = False
+        if self.chessboard.return_piece_on_field(new_pos):
+            need_to_remove_piece = True
+
+        player = piece.color
+
+        if player == self.which_players_turn:
+            if piece.move(new_pos=new_pos):         # if move succesfull
+                if player == "w":                   # change player turn
+                    self.which_players_turn = "b"
+                else:
+                    self.which_players_turn = "w"
+                print(self.display_board())
+                # move worked, piece needs to be removed
+                return True, need_to_remove_piece
+
+
 
         else:
             raise ValueError(f"{self.which_players_turn} has to move!")

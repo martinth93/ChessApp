@@ -45,6 +45,9 @@ class Piece():
             self.chessboard.remove_piece_from_board(self.position)
             self.position = new_pos
             self.chessboard.place_piece_on_board(self)
+            return True
+        else:
+            raise ValueError('Move not possible.')
 
     def general_illegal_move(self, new_pos):
         """

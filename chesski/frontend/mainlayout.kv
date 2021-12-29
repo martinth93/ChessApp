@@ -1,0 +1,31 @@
+# BoxLayout
+<MainLayout>:
+
+    orientation: 'vertical'
+    BoxLayout
+        size_hint: 1, .1
+        Label:
+            text: 'The worst chess engine'
+            size_hint: .8, 1
+            font_size: max(dp(15), self.height - dp(20))
+        Button:
+            text: root.start_reset_button_text
+            size_hint: .1, 1
+            font_size: max(dp(15), self.height - dp(20))
+            on_press: root.start_game()
+    BoxLayout:
+        id: main_container
+        orientation: 'horizontal'
+        RelativeLayout:
+            id: game_container
+            GameLayout:
+                id: game_box
+                graphics_path: root.graphics_path
+                Image:
+                    source:root.graphics_path + '/chessboard_and_pieces/chessboard.png'
+                BoardGrid:
+                    id: board_grid
+                # Here is where Chess Pieces are instantiated
+        Button:
+            text: 'A'
+            size_hint: .5, 1
