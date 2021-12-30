@@ -5,14 +5,13 @@ from chesski.backend.game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 
 
 class Match():
-    """
-    A class setting up Board and Pieces and Managing Moves.
-    """
+    """A class setting up Board and Pieces and Managing Moves."""
 
     def __init__(self, chessboard=None, which_players_turn = 'w'):
 
         self.which_players_turn = which_players_turn # white or black has to move
         self.pieces = {'w': [], 'b': []}
+        self.removed_pieces = {'w': [], 'b': []}
 
         if chessboard is None:
             self.chessboard = ChessBoard()  # create a new chessboard
@@ -112,10 +111,12 @@ class Match():
 
         If move allowed: return: True,
 
-        If move is not allowed, ValueError with further specification is raised.
+        If wrong player made turn, ValueError with further specification is raised.
         """
         start_pos, end_pos = None, None
         need_to_remove_piece = False
+        checkmating_player = None
+        piece_to_remove = None
 
         # get coordinates of startfield and endfield
         if in_notation:
@@ -127,26 +128,112 @@ class Match():
         # get piece on start_position
         piece = self.chessboard.return_piece_on_field(start_pos)
 
-        # change flag if piece on end_field
-        if self.chessboard.return_piece_on_field(end_pos):
-            need_to_remove_piece = True
-
         player = piece.color
+        opponent = self.get_opponent(player)
+
         # check if right player makes turn
         if player != self.which_players_turn:
-            raise ValueError(f"{self.which_players_turn} has to move!")
+            raise ValueError(f"Wrong player: {self.which_players_turn} has to move!")
 
         # make move if succesfull
-        if piece.move(end_pos=end_pos):
-            # change player turn
-            if player == "w":
-                self.which_players_turn = "b"
-            else:
-                self.which_players_turn = "w"
-            # print(self.display_board())
-            return True, need_to_remove_piece
-            # move worked, piece that needs to be removed
+        if piece.move_is_legal(end_pos=end_pos):
 
+            # change flag if piece on end_field
+            piece_to_remove = self.chessboard.return_piece_on_field(end_pos)
+            if piece_to_remove != None:
+                self.pieces[opponent].remove(piece_to_remove)
+            piece.move(end_pos)
+
+            if self.in_check(player):       # if putting yourself in check
+                piece.move(start_pos)               # revert move
+                if piece_to_remove:
+                    piece_to_remove.move(end_pos)   # put removed piece back
+                    self.pieces[opponent].append(piece_to_remove)
+
+            else:
+                if piece_to_remove != None:
+                    need_to_remove_piece = True
+                    self.removed_pieces[opponent].append(piece_to_remove)
+                self.change_turns(player)
+                # print(self.display_board())
+
+                if self.in_check(opponent):
+                    print('Putting other player in check')
+                    if self.its_checkmate(opponent):
+                        checkmating_player = player
+                return True, need_to_remove_piece, checkmating_player
+                # move worked, piece that needs to be removed
+        return False, None, None
+
+    def change_turns(self, current_player):
+        """Function switching player that has to move next."""
+        if current_player == "w":
+            self.which_players_turn = "b"
+        else:
+            self.which_players_turn = "w"
+
+    @staticmethod
+    def get_opponent(player):
+        if player == 'w':
+            return 'b'
+        else:
+            return 'w'
+
+    def get_king_position(self, player):
+        for piece in self.pieces[player]:
+            if piece.Abbrevation == 'K':
+                return piece.position
+
+    def in_check(self, player):
+        """Function checking if player is in check. (king can be taken)"""
+        opponent = self.get_opponent(player)
+        king_pos = self.get_king_position(player)
+
+        print('Checking If Move would put player in check:')
+        for opponent_piece in self.pieces[opponent]:
+            if opponent_piece.move_is_legal(king_pos):
+                print('Checking Move was found!')
+                return True
+
+        print('No checking Move was found!')
+        return False # if no piece can take king
+
+    def its_checkmate(self, losing_player):
+        """Function checking if player is in checkmate. (king cant be saved)"""
+        king_pos = self.get_king_position(losing_player)
+        winning_player = self.get_opponent(losing_player)
+
+        fields = []
+
+        for row in range(8):
+            for col in range(8):
+                fields.append((row, col))
+
+        for piece in self.pieces[losing_player]:
+            for field in fields:                    # check each possible move
+                if piece.move_is_legal(field):
+                    start_pos = piece.position
+                    piece_to_remove = self.chessboard.return_piece_on_field(field)
+                    if piece_to_remove != None:
+                        self.pieces[winning_player].remove(piece_to_remove)
+                    piece.move(field)
+
+                    if not self.in_check(losing_player):    # if moved out of check
+                        piece.move(start_pos)               # revert move
+                        if piece_to_remove:
+                            piece_to_remove.move(field)   # put removed piece back
+                            self.pieces[winning_player].append(piece_to_remove)
+                        return False
+                    else:
+                        piece.move(start_pos)               # revert move
+                        if piece_to_remove:
+                            piece_to_remove.move(field)   # put removed piece back
+                            self.pieces[winning_player].append(piece_to_remove)
+
+        print('##################################################\n' \
+              + 'Checkmate!\n' \
+              + '##################################################')
+        return True
 
     def display_board(self):
         """

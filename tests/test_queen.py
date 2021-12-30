@@ -60,13 +60,9 @@ class TestQueen(TestPiece):
         shouldn't update position and raise Error.
         """
         self._test_move(piece_type=Queen, piece_pos=(1, 2), piece_color='w',
-                        piece_move=(3, 3), piece_output='w-Q-c2',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move queen like that.')
+                        piece_move=(3, 3), piece_output='w-Q-c2')
         self._test_move(piece_type=Queen, piece_pos=(5, 5), piece_color='b',
-                        piece_move=(3, 4), piece_output='b-Q-f6',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move queen like that.')
+                        piece_move=(3, 4), piece_output='b-Q-f6')
 
     def test_move_is_illegal_diagonal_pawn_between(self):
         """
@@ -75,14 +71,10 @@ class TestQueen(TestPiece):
         """
         self._test_move(piece_type=Queen, piece_pos=(1, 1), piece_color='w',
                         piece_move=(5, 5), piece_output='w-Q-b2',
-                        piece2_type=Pawn, piece2_pos=(2, 2), piece2_color='b',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move queen like that.')
+                        piece2_type=Pawn, piece2_pos=(2, 2), piece2_color='b')
         self._test_move(piece_type=Queen, piece_pos=(5, 5), piece_color='b',
                         piece_move=(1, 1), piece_output='b-Q-f6',
-                        piece2_type=Pawn, piece2_pos=(3, 3), piece2_color='w',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move queen like that.')
+                        piece2_type=Pawn, piece2_pos=(3, 3), piece2_color='w')
 
     def test_move_is_illegal_straight_pawn_between(self):
         """
@@ -91,11 +83,7 @@ class TestQueen(TestPiece):
         """
         self._test_move(piece_type=Queen, piece_pos=(1, 1), piece_color='w',
                         piece_move=(5, 1), piece_output='w-Q-b2',
-                        piece2_type=Pawn, piece2_pos=(2, 1), piece2_color='b',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move queen like that.')
+                        piece2_type=Pawn, piece2_pos=(2, 1), piece2_color='b')
         self._test_move(piece_type=Queen, piece_pos=(5, 5), piece_color='b',
                         piece_move=(5, 1), piece_output='b-Q-f6',
-                        piece2_type=Pawn, piece2_pos=(5, 3), piece2_color='w',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move queen like that.')
+                        piece2_type=Pawn, piece2_pos=(5, 3), piece2_color='w')

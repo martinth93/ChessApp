@@ -5,6 +5,7 @@ from chesski.backend.game.pieces import Pawn
 
 
 class TestBoardSimple(unittest.TestCase):
+
     def test_initialize_state(self):
         """
         Initializing the state should yield empty board
@@ -51,7 +52,7 @@ class TestBoardSimple(unittest.TestCase):
         chessboard = ChessBoard()
         p1 = Pawn(position=(1, 3), color="w", chessboard=chessboard)
         # pawn placed on (1, 3)
-        chessboard.remove_piece_from_board(piece_pos=(1, 3))
+        chessboard.remove_from_board(p1)
         correct_state = [
                             [None, None, None, None, None, None, None, None],
                             [None, None, None, None, None, None, None, None],
@@ -80,6 +81,10 @@ class TestBoardSimple(unittest.TestCase):
         self.assertEqual(correct_piece, generated_piece, errormessage)
 
 class TestBoardKomplexPawn(unittest.TestCase):
+
+    def _check_and_move(self, piece, end_pos):
+        if piece.move_is_legal(end_pos):
+            piece.move(end_pos)
 
     def setUp(self):
         self.chessboard = ChessBoard()
@@ -124,10 +129,10 @@ class TestBoardKomplexPawn(unittest.TestCase):
         """
         Testing if moving a pawn correctly effects the state.
         """
-        self.p4.move(end_pos=(3, 3))
-        self.p5.move(end_pos=(2, 4))
-        self.p15.move(end_pos=(4, 6))
-        self.p16.move(end_pos=(5, 7))
+        self._check_and_move(self.p4, (3, 3))
+        self._check_and_move(self.p5, (2, 4))
+        self._check_and_move(self.p15, (4, 6))
+        self._check_and_move(self.p16, (5, 7))
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
@@ -148,13 +153,13 @@ class TestBoardKomplexPawn(unittest.TestCase):
         Testing if moving a pawn taking an opponents pawn (p8 taking p16)
         correctly effects the state.
         """
-        self.p4.move(end_pos=(3, 3))
-        self.p5.move(end_pos=(2, 4))
-        self.p15.move(end_pos=(4, 6))
-        self.p16.move(end_pos=(5, 7))
+        self._check_and_move(self.p4, (3, 3))
+        self._check_and_move(self.p5, (2, 4))
+        self._check_and_move(self.p15, (4, 6))
+        self._check_and_move(self.p16, (5, 7))
 
-        self.p8.move(end_pos=(3, 7))
-        self.p8.move(end_pos=(4, 6)) # p8 taking p15!
+        self._check_and_move(self.p8, (3, 7))
+        self._check_and_move(self.p8, (4, 6)) # p8 taking p15!
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
@@ -175,18 +180,16 @@ class TestBoardKomplexPawn(unittest.TestCase):
         Testing if moving a pawn on field of already occupied field by another
         pawn correctly effects the state.
         """
-        self.p4.move(end_pos=(3, 3))
-        self.p5.move(end_pos=(2, 4))
-        self.p15.move(end_pos=(4, 6))
-        self.p16.move(end_pos=(5, 7))
+        self._check_and_move(self.p4, (3, 3))
+        self._check_and_move(self.p5, (2, 4))
+        self._check_and_move(self.p15, (4, 6))
+        self._check_and_move(self.p16, (5, 7))
 
-        self.p8.move(end_pos=(3, 7))
-        self.p8.move(end_pos=(4, 6))
-        self.p7.move(end_pos=(3, 6))
+        self._check_and_move(self.p8, (3, 7))
+        self._check_and_move(self.p8, (4, 6))
+        self._check_and_move(self.p7, (3, 6))
 
-        with self.assertRaises(ValueError) as e:
-            self.p7.move(end_pos=(4, 6)) # illegal move! already occupied by p8
-        self.assertEqual(str(e.exception), 'Move failed: Field blocked by another same-colored piece.')
+        self._check_and_move(self.p7, (4, 6)) # illegal move! already occupied by p8
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],
@@ -206,26 +209,22 @@ class TestBoardKomplexPawn(unittest.TestCase):
         """
         Testing if moving a pawn off the field correctly effects the state.
         """
-        self.p4.move(end_pos=(3, 3))
-        self.p5.move(end_pos=(2, 4))
-        self.p15.move(end_pos=(4, 6))
-        self.p16.move(end_pos=(5, 7))
+        self._check_and_move(self.p4, (3, 3))
+        self._check_and_move(self.p5, (2, 4))
+        self._check_and_move(self.p15, (4, 6))
+        self._check_and_move(self.p16, (5, 7))
 
-        self.p8.move(end_pos=(3, 7))
-        self.p8.move(end_pos=(4, 6))
-        self.p7.move(end_pos=(3, 6))
+        self._check_and_move(self.p8, (3, 7))
+        self._check_and_move(self.p8, (4, 6))
+        self._check_and_move(self.p7, (3, 6))
 
-        with self.assertRaises(ValueError) as e:
-            self.p7.move(end_pos=(4, 6)) # illegal move! already occupied by p8
-        self.assertEqual(str(e.exception), 'Move failed: Field blocked by another same-colored piece.')
+        self._check_and_move(self.p7, (4, 6)) # illegal move! already occupied by p8
 
-        self.p8.move(end_pos=(5, 6))
-        self.p8.move(end_pos=(6, 6))
-        self.p8.move(end_pos=(7, 6))
+        self._check_and_move(self.p8, (5, 6))
+        self._check_and_move(self.p8, (6, 6))
+        self._check_and_move(self.p8, (7, 6))
 
-        with self.assertRaises(ValueError) as e:
-            self.p8.move(end_pos=(8, 6)) # illegal move! out of board
-        self.assertEqual(str(e.exception), 'Move failed: New position out of board.')
+        self._check_and_move(self.p8, (8, 6)) # illegal move! out of board
 
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,   None],

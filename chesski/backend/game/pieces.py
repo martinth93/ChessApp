@@ -9,7 +9,7 @@ class Piece():
         self.color = color  # color of piece (which player it belongs to)
         self.Abbrevation = None
         self.chessboard = chessboard
-        self.chessboard.place_piece_on_board(self) # place it on board
+        self.chessboard.place_on_board(self) # place it on board
 
     def is_white(self):
         """Methods that returns true if piece belongs to the white player"""
@@ -35,20 +35,27 @@ class Piece():
 
     def move(self, end_pos):
         """
-        Updates position if move is legal.
-        If illegal Error is being raised.
+        Updates position and place piece on chessbaord.
         """
-        self.check_general_illegal_move(end_pos)
-        self.check_piece_rules(end_pos)
-
         # if move is legal according to general and piece-specific rules -
-        # move piece and eventually remove opponents piece
-        self.chessboard.remove_piece_from_board(end_pos)
-        self.chessboard.remove_piece_from_board(self.position)
+        # move piece
+        self.chessboard.remove_from_board(self)
         self.position = end_pos
-        self.chessboard.place_piece_on_board(self)
+        self.chessboard.place_on_board(self)
 
-        return True
+    def move_is_legal(self, end_pos):
+        """
+        Checks if move is legal according to general piece-unspecific and
+        piece-specific rules like moving restictions.
+        """
+        try:
+            self.check_general_illegal_move(end_pos)
+            self.check_piece_rules(end_pos)
+            return True
+        except ValueError as e:
+            print(e)
+            return False
+
 
     def check_general_illegal_move(self, end_pos):
         """
@@ -100,7 +107,11 @@ class Pawn(Piece):
         if not self.is_white():         # white pawns can only go up
             one_field = -1              # black pawns can only go down
 
-        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
+        start_pos = self.position
+        on_starting_row = start_pos[0] == ((7 + one_field) % 7)
+        # boolean if pawn on starting row (1 for white/6 for black)
+
+        direction = tuple(map(lambda i, j: i - j, end_pos, start_pos))
         # how many fields up/down left/rigth
 
         if self.chessboard.return_piece_on_field(end_pos) == None:
@@ -108,25 +119,30 @@ class Pawn(Piece):
 
             if direction == (one_field, 0):
                 return True
-                # if moved one field up (if white) / down (if black)
-                # in same column
+                # if moved one field up (if white) or down (if black)
 
-            elif (direction == (2 * one_field, 0) and
-                self.position[0] == ((7 + one_field) % 7)):
-                if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
-                    return True
-                    # returns True if no pieces between start and endposition
-                else:
-                    raise ValueError('Move failed: Cannot move pawn like that.')
+            # if moved two fields up from startrow
+            elif direction[0] == 2 * one_field and on_starting_row:
+                if direction[1] == 0:
+                    if self.chessboard.no_pieces_between(start_pos, end_pos):
+                        return True
+                        # returns True if no pieces between start and endposition
 
-        else:
-        # if new field does have a piece on it
+        else: # if new field does have a piece on it
             if (direction == (one_field, one_field) or
                     direction == (one_field, -one_field)):
                return True
-               # if moved one to the site
-               # and 1 up (if white) / 1 down (if black) (diagonal, legal)
+               # if moved one field diagonal and up
 
+            # en passant
+            elif (direction[0] == 2*one_field and on_starting_row and
+                  abs(direction[1]) == 1):
+                inter_pos = (start_pos[0]+2*one_field, start_pos[1])
+                if self.chessboard.no_pieces_between(start_pos, inter_pos):
+                    if self.chessboard.return_piece_on_field(end_pos):
+                        return True
+
+        # no legal move found
         raise ValueError('Move failed: Cannot move pawn like that.')
 
 
@@ -149,7 +165,7 @@ class Rook(Piece):
         # how many fields up/down left/rigth
 
         if direction[0] == 0 or direction[1] == 0:  # only along row or column
-            if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
+            if self.chessboard.no_pieces_between(self.position, end_pos):
                 return True
                 # returns True if no pieces between start and endposition
             else:
@@ -209,7 +225,7 @@ class Bishop(Piece):
 
         if abs(direction[0]) == abs(direction[1]):
         # only diagonal moves allowed
-            if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
+            if self.chessboard.no_pieces_between(self.position, end_pos):
                 return True
                 # returns True if no pieces between start and endposition
             else:
@@ -240,7 +256,7 @@ class Queen(Piece):
         if (abs(direction[0]) == abs(direction[1]) or
             direction[0] == 0 or direction[1] == 0):
         # only diagonal/vertical and horizontal moves allowed
-            if self.chessboard.no_pieces_between(start_pos=self.position, end_pos = end_pos):
+            if self.chessboard.no_pieces_between(self.position, end_pos):
                 return True
                 # returns True if no pieces between start and endposition
             else:

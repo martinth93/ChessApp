@@ -81,13 +81,9 @@ class TestPawn(TestPiece):
         not update postion.
         """
         self._test_move(piece_type=Pawn, piece_pos=(1, 2), piece_color='w',
-                        piece_move=(0, 2), piece_output='w-P-c2',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece_move=(0, 2), piece_output='w-P-c2')
         self._test_move(piece_type=Pawn, piece_pos=(6, 2), piece_color='b',
-                        piece_move=(7, 2), piece_output='b-P-c7',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece_move=(7, 2), piece_output='b-P-c7')
 
     def test_move_is_illegal_2up_not_at_startrow(self):
         """
@@ -95,13 +91,9 @@ class TestPawn(TestPiece):
         position should raise ValueError and not update postion.
         """
         self._test_move(piece_type=Pawn, piece_pos=(3, 2), piece_color='w',
-                        piece_move=(5, 2), piece_output='w-P-c4',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece_move=(5, 2), piece_output='w-P-c4')
         self._test_move(piece_type=Pawn, piece_pos=(5, 2), piece_color='b',
-                        piece_move=(3, 2), piece_output='b-P-c6',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece_move=(3, 2), piece_output='b-P-c6')
 
     def test_move_is_illegal_2up_notempty_at_end(self):
         """
@@ -110,14 +102,10 @@ class TestPawn(TestPiece):
         """
         self._test_move(piece_type=Pawn, piece_pos=(1, 2), piece_color='w',
                         piece_move=(3, 2), piece_output='w-P-c2',
-                        piece2_type=Pawn, piece2_pos=(3, 2), piece2_color='b',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece2_type=Pawn, piece2_pos=(3, 2), piece2_color='b')
         self._test_move(piece_type=Pawn, piece_pos=(6, 2), piece_color='b',
                         piece_move=(4, 2), piece_output='b-P-c7',
-                        piece2_type=Pawn, piece2_pos=(4, 2), piece2_color='w',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece2_type=Pawn, piece2_pos=(4, 2), piece2_color='w')
 
     def test_move_is_illegal_2up_notempty_inbetween(self):
         """
@@ -127,14 +115,10 @@ class TestPawn(TestPiece):
         """
         self._test_move(piece_type=Pawn, piece_pos=(1, 2), piece_color='w',
                         piece_move=(3, 2), piece_output='w-P-c2',
-                        piece2_type=Pawn, piece2_pos=(2, 2), piece2_color='b',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece2_type=Pawn, piece2_pos=(2, 2), piece2_color='b')
         self._test_move(piece_type=Pawn, piece_pos=(6, 2), piece_color='b',
                         piece_move=(4, 2), piece_output='b-P-c7',
-                        piece2_type=Pawn, piece2_pos=(5, 2), piece2_color='b',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece2_type=Pawn, piece2_pos=(5, 2), piece2_color='b')
 
     def test_move_is_illegal_diagonal(self):
         """
@@ -143,11 +127,7 @@ class TestPawn(TestPiece):
         """
         self._test_move(piece_type=Pawn, piece_pos=(1, 2), piece_color='w',
                         piece_move=(0, 1), piece_output='w-P-c2',
-                        piece2_type=Pawn, piece2_pos=(0, 1), piece2_color='b',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Cannot move pawn like that.')
+                        piece2_type=Pawn, piece2_pos=(0, 1), piece2_color='b')
         self._test_move(piece_type=Pawn, piece_pos=(6, 2), piece_color='b',
                         piece_move=(7, 3), piece_output='b-P-c7',
-                        piece2_type=Pawn, piece2_pos=(7, 3), piece2_color='b',
-                        expected_error=ValueError,
-                        expected_msg='Move failed: Field blocked by another same-colored piece.')
+                        piece2_type=Pawn, piece2_pos=(7, 3), piece2_color='b')

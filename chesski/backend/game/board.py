@@ -22,15 +22,15 @@ class ChessBoard():
             self.state.append(row)
             # create 8x8 None Board (list([row0], [row1], ...))
 
-    def remove_piece_from_board(self, piece_pos):
+    def remove_from_board(self, piece):
         """
         Replaces field at piece_pos (int:col, int:row) of the chessboard with "None"
         """
-        row = piece_pos[0]
-        col = piece_pos[1]
+        row = piece.position[0]
+        col = piece.position[1]
         self.state[row][col] = None
 
-    def place_piece_on_board(self, piece):
+    def place_on_board(self, piece):
         """
         Places piece (instance of Piece or a Subclass like Pawn)
         on field piece_pos (int:col, int:row) on the chessboard.

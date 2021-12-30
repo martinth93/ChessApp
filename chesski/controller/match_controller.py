@@ -5,11 +5,13 @@ class MatchController:
     def __init__(self):
         self.match = None
         self.main_layout = None
+        self.game_over = True
 
     def init_match(self):
         """
         Initializing a match in the backend.
         """
+        self.game_over = False
         self.match = Match()
 
     def _get_board_state(self):
@@ -44,12 +46,14 @@ class MatchController:
         move = (last_coordinates, next_coordinates)
 
         try:
-            move_worked, piece_removal = self.match.make_a_move(move)
-            print(move_worked, piece_removal)
+            move_worked, piece_removal, checkmating_player = self.match.make_a_move(move)
+            if checkmating_player:
+                self.main_layout.handle_checkmate(checkmating_player)
+                self.game_over = True
             if piece_removal and move_worked:
                 self.main_layout.remove_piece(next_coordinates)
             return move_worked
 
-        # handling of illegal moves
+        # handling if wrong player made turn
         except ValueError as e:
             print(e)
