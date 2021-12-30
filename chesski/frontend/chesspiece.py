@@ -23,7 +23,7 @@ class ChessPiece(DragBehavior, Image):
 
         self.enable_drag()
 
-        Clock.schedule_once(self.turn_visible, .3)
+        Clock.schedule_once(self.turn_visible, .1)
 
     def enable_drag(self):
         self.drag_distance = dp(1)
@@ -115,4 +115,4 @@ class ChessPiece(DragBehavior, Image):
         self.center_x = self.board.fields[row][col].center_x
         self.center_y = self.board.fields[row][col].center_y
         self.last_coordinates = coordinates
-        print('moved to coordinates: ', coordinates)
+        # print('moved to coordinates: ', coordinates)

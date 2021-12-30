@@ -46,14 +46,40 @@ class MatchController:
         move = (last_coordinates, next_coordinates)
 
         try:
-            move_worked, piece_removal, checkmating_player = self.match.make_a_move(move)
+            move_worked, piece_removal, checkmating_player, castling = self.match.make_a_move(move)
+
+            if piece_removal:
+                self.main_layout.remove_piece(next_coordinates)
+            elif castling:
+                self.main_layout.remove_piece(next_coordinates)
+                self.main_layout.remove_piece(last_coordinates)
+                current_player = self.get_current_player()
+                opponent = self.match.get_opponent(current_player)
+                type_king = f'{opponent}_K'
+                type_rook = f'{opponent}_R'
+                row = last_coordinates[0]
+                if castling == 'short':
+                    new_king_position = (row, 6)
+                    new_rook_position = (row, 5)
+                elif castling == 'long':
+                    new_king_position = (row, 2)
+                    new_rook_position = (row, 3)
+                self.main_layout.display_piece(type_rook, new_rook_position)
+                self.main_layout.display_piece(type_king, new_king_position)
+                print("castled")
+
             if checkmating_player:
                 self.main_layout.handle_checkmate(checkmating_player)
                 self.game_over = True
-            if piece_removal and move_worked:
-                self.main_layout.remove_piece(next_coordinates)
+
             return move_worked
+
+
 
         # handling if wrong player made turn
         except ValueError as e:
-            print(e)
+            # print(e)
+            pass
+
+    def get_current_player(self):
+        return self.match.which_players_turn

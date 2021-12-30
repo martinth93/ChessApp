@@ -10,6 +10,7 @@ class Piece():
         self.Abbrevation = None
         self.chessboard = chessboard
         self.chessboard.place_on_board(self) # place it on board
+        self.moved_once = False
 
     def is_white(self):
         """Methods that returns true if piece belongs to the white player"""
@@ -49,40 +50,40 @@ class Piece():
         piece-specific rules like moving restictions.
         """
         try:
-            self.check_general_illegal_move(end_pos)
+            self.check_moving_off_board(end_pos)
+            self.check_moving_on_place(end_pos)
+            self.check_taking_own_piece(end_pos)
             self.check_piece_rules(end_pos)
             return True
         except ValueError as e:
-            print(e)
+            # print(e)
             return False
 
+    def check_moving_off_board(self, end_pos):
+        if (end_pos[1] < 0 or end_pos[1] > 7 or
+            end_pos[0] < 0 or end_pos[0] > 7):
+            raise ValueError('Move failed: New position out of board.')
 
-    def check_general_illegal_move(self, end_pos):
-        """
-        Checking if a move is illegal, according to general rules that are equal
-        to all pieces.
-        Move to the field it is already on.
-        Move to a field out of board.
-        Move to a field where if there is already one of your
-        pieces (Except castling).
-        """
+    def check_moving_on_place(self, end_pos):
         if end_pos == self.position:
             raise ValueError('Move failed: Piece already on new position.')
             # didn't move! end_position was old position
 
-        if (end_pos[1] < 0 or end_pos[1] > 7 or
-            end_pos[0] < 0 or end_pos[0] > 7):
-            raise ValueError('Move failed: New position out of board.')
-            # If out of board
-
+    def check_taking_own_piece(self, end_pos):
+        """
+        Move to a field where if there is already one of your pieces.
+        """
         piece_to_remove = self.chessboard.return_piece_on_field(end_pos)
         # Checking if there is a piece on end_pos
 
         if piece_to_remove != None:
-            if piece_to_remove.color == self.color:
+            if self.Abbrevation == 'K':
+                if self.check_for_castle(end_pos):
+                    return # don't raise error if castling
+
+            elif piece_to_remove.color == self.color:
                 raise ValueError('Move failed: Field blocked by another same-colored piece.')
                 # if trying to move on field with own piece on it
-                # Castling?
 
 
 # ----------------------------- Classes of Chess Pieces -----------------------
@@ -283,9 +284,26 @@ class King(Piece):
         direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
         # how many fields up/down left/rigth
 
+        if self.check_for_castle(end_pos):
+            return True
+
         if abs(direction[0]) < 2 and abs(direction[1]) < 2:
             return True
             # king can move in any of the 8 squares surrounding him
 
         else: # moved to far
             raise ValueError('Move failed: Cannot move king like that.')
+
+    def check_for_castle(self, end_pos):
+        direction = tuple(map(lambda i, j: i - j, end_pos, self.position))
+
+        if direction == (0, 3) or direction == (0, -4):
+            end_piece = self.chessboard.return_piece_on_field(end_pos)
+            if end_piece and not self.moved_once:
+                if end_piece.color==self.color and end_piece.Abbrevation == 'R':
+                    if not end_piece.moved_once:
+                        if self.chessboard.no_pieces_between(self.position, end_pos):
+                            if direction == (0, 3):
+                                return "short"
+                            else:
+                                return "long"

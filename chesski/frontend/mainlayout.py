@@ -56,7 +56,7 @@ class MainLayout(BoxLayout):
         """
         Removes a piece on a given coordiante.
         """
-        print('removing piece')
+        # print('removing piece')
         for i in range(len(self.piece_widgets)):
             # print('checking piece ', i)
             piece = self.piece_widgets[i]

@@ -104,6 +104,26 @@ class Match():
             return piece_to_move.position, (end_row, end_col)
             # No Issue found
 
+    def castle(self, long_short, king, rook):
+        if long_short == 'short':
+            new_king_position = (king.position[0], 6)
+            new_rook_position = (rook.position[0], 5)
+        elif long_short == 'long':
+            new_king_position = (king.position[0], 2)
+            new_rook_position = (rook.position[0], 3)
+        king.move(new_king_position)
+        rook.move(new_rook_position)
+
+    def revert_castle(self, long_short, king, rook):
+        old_king_position = (king.position[0], 4)
+        if long_short == 'short':
+            old_rook_position = (rook.position[0], 7)
+        elif long_short == 'long':
+            old_rook_position = (rook.position[0], 0)
+        king.move(old_king_position)
+        rook.move(old_rook_position)
+
+
     def make_a_move(self, move, in_notation=False):
         """
         Function handling the moves given as string in common chess notation
@@ -117,6 +137,7 @@ class Match():
         need_to_remove_piece = False
         checkmating_player = None
         piece_to_remove = None
+        castling = ""
 
         # get coordinates of startfield and endfield
         if in_notation:
@@ -136,24 +157,32 @@ class Match():
             raise ValueError(f"Wrong player: {self.which_players_turn} has to move!")
 
         # make move if succesfull
-        if piece.move_is_legal(end_pos=end_pos):
+        if piece.move_is_legal(end_pos):
 
-            # change flag if piece on end_field
+            # check for piece on end-field
             piece_to_remove = self.chessboard.return_piece_on_field(end_pos)
             if piece_to_remove != None:
-                self.pieces[opponent].remove(piece_to_remove)
-            piece.move(end_pos)
+                if piece_to_remove.color == piece.color:    # castling!
+                    castling = piece.check_for_castle(end_pos)
+                    self.castle(castling, piece, piece_to_remove)
+                else:
+                    self.pieces[opponent].remove(piece_to_remove)
+            if not castling:
+                piece.move(end_pos)
 
             if self.in_check(player):       # if putting yourself in check
                 piece.move(start_pos)               # revert move
-                if piece_to_remove:
-                    piece_to_remove.move(end_pos)   # put removed piece back
-                    self.pieces[opponent].append(piece_to_remove)
-
-            else:
                 if piece_to_remove != None:
-                    need_to_remove_piece = True
-                    self.removed_pieces[opponent].append(piece_to_remove)
+                    piece_to_remove.move(end_pos)   # put removed piece back
+                    if not castling:
+                        self.pieces[opponent].append(piece_to_remove)
+
+            else:   # move is allowed
+                if piece_to_remove != None:
+                    if not castling:
+                        need_to_remove_piece = True
+                        self.removed_pieces[opponent].append(piece_to_remove)
+                piece.moved_once = True
                 self.change_turns(player)
                 # print(self.display_board())
 
@@ -161,9 +190,9 @@ class Match():
                     print('Putting other player in check')
                     if self.its_checkmate(opponent):
                         checkmating_player = player
-                return True, need_to_remove_piece, checkmating_player
-                # move worked, piece that needs to be removed
-        return False, None, None
+                return True, need_to_remove_piece, checkmating_player, castling
+                # move worked, piece that needs to be removed, if checkmate
+        return False, None, None, ""
 
     def change_turns(self, current_player):
         """Function switching player that has to move next."""
@@ -189,13 +218,13 @@ class Match():
         opponent = self.get_opponent(player)
         king_pos = self.get_king_position(player)
 
-        print('Checking If Move would put player in check:')
+        # print('Checking If Move would put player in check:')
         for opponent_piece in self.pieces[opponent]:
             if opponent_piece.move_is_legal(king_pos):
-                print('Checking Move was found!')
+                # print('Checking Move was found!')
                 return True
 
-        print('No checking Move was found!')
+        # print('No checking Move was found!')
         return False # if no piece can take king
 
     def its_checkmate(self, losing_player):
@@ -214,21 +243,29 @@ class Match():
                 if piece.move_is_legal(field):
                     start_pos = piece.position
                     piece_to_remove = self.chessboard.return_piece_on_field(field)
+
                     if piece_to_remove != None:
-                        self.pieces[winning_player].remove(piece_to_remove)
-                    piece.move(field)
+                        if piece_to_remove.color == piece.color:    # castling!
+                            castling = piece.check_for_castle(field)
+                            self.castle(castling, piece, piece_to_remove)
+                        else:
+                            self.pieces[winning_player].remove(piece_to_remove)
+                    if not castling:
+                        piece.move(field)
 
                     if not self.in_check(losing_player):    # if moved out of check
                         piece.move(start_pos)               # revert move
-                        if piece_to_remove:
+                        if piece_to_remove != None:
                             piece_to_remove.move(field)   # put removed piece back
-                            self.pieces[winning_player].append(piece_to_remove)
+                            if piece_to_remove.color != piece.color: # not castling!
+                                self.pieces[winning_player].append(piece_to_remove)
                         return False
                     else:
                         piece.move(start_pos)               # revert move
-                        if piece_to_remove:
+                        if piece_to_remove != None:
                             piece_to_remove.move(field)   # put removed piece back
-                            self.pieces[winning_player].append(piece_to_remove)
+                            if piece_to_remove.color != piece.color: # not castling!
+                                self.pieces[winning_player].append(piece_to_remove)
 
         print('##################################################\n' \
               + 'Checkmate!\n' \
