@@ -1,28 +1,25 @@
-import numpy as np
-
 from chesski.backend.game.board import ChessBoard
 from chesski.backend.game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 
+from chesski.backend.game.helper_functions import translate_from_notation, display_board
 
 class Match():
     """A class setting up Board and Pieces and Managing Moves."""
 
     def __init__(self, chessboard=None, which_players_turn = 'w'):
 
-        self.which_players_turn = which_players_turn # white or black has to move
+        self.which_players_turn = which_players_turn
         self.pieces = {'w': [], 'b': []}
         self.removed_pieces = {'w': [], 'b': []}
 
         if chessboard is None:
-            self.chessboard = ChessBoard()  # create a new chessboard
-            self.initialize_pieces()  # create all necessary pieces
+            self.chessboard = ChessBoard()
+            self.initialize_pieces()
 
 
     def initialize_pieces(self):
-        """
-        Creates Instances of all necessary Chesspieces and places them on
-        the right starting spot.
-        """
+        """Creates Instances of all necessary Chesspieces and places them on
+        the right starting spot."""
 
         # (PieceClass, [rows], [columns])
         starting_position=[
@@ -45,147 +42,63 @@ class Match():
                                                     chessboard=self.chessboard)
                     self.pieces[color].append(new_piece)
 
-
-    def translate_from_notation(self, move):
-        """
-        Translates move form common chess notation into coordinates.
-        Returns coordinate of piece to move and coordinate of field to move to.
-        """
-        letters = "abcdefgh"
-        piece_to_move = None
-        possible_pieces = 0
-        start_col = None
-        start_row = None
-        end_row = None
-        end_col = None
-        piece_abbrevation = None
-
-        if move[0].islower():  # Pawn move, eg. e4, c4, hxg6
-            start_col = letters.index(move[0])
-            end_col = letters.index(move[-2])
-            end_row = int(move[-1]) - 1
-            piece_abbrevation = "P"
-
-        if move[0].isupper():  # Piece move, eg. Ne4, Kg4, Rfe4, Rxe3, Rh4xg6
-            end_col = letters.index(move[-2])
-            end_row = int(move[-1]) - 1
-            piece_abbrevation = move[0]
-
-            if len(move) == 4:
-                if 'x' not in move:    # Piece column has to be specified: Rfe4
-                    start_col = letters.index(move[1])
-            elif len(move) == 5:
-                start_col = letters.index(move[1])
-                if 'x' not in move:    # Piece column and row has to be specified: Rf4e4
-                    start_row = int(move[2]) - 1
-            elif len(move) == 6:  # Piece takes and column and row has to be specified: Rf4xe4
-                start_col = letters.index(move[1])
-                start_row = int(move[2]) - 1
-
-        # search for piece to move
-        for piece in self.pieces[self.which_players_turn]:
-            if piece.Abbrevation == piece_abbrevation:
-                if start_col != None: # if starting column is specified
-                    if piece.position[1] != start_col:
-                        continue
-                if start_row != None: # if starting row is specified
-                    if piece.position[0] != start_row:
-                        continue
-
-                if piece.move_is_legal(end_pos=(end_row, end_col)):
-                    piece_to_move = piece
-                    possible_pieces += 1
-
-        if possible_pieces > 1:
-            raise ValueError(f"found {possible_pieces} possibilities, check notation!")
-        elif piece_to_move == None:
-            raise ValueError(f"found no possibilities, check notation!")
-        else:
-            return piece_to_move.position, (end_row, end_col)
-            # No Issue found
-
-    def castle(self, long_short, king, rook):
-        new_king_position = None
-        new_rook_position = None
-        if long_short == 'short':
-            new_king_position = (king.position[0], 6)
-            new_rook_position = (rook.position[0], 5)
-        elif long_short == 'long':
-            new_king_position = (king.position[0], 2)
-            new_rook_position = (rook.position[0], 3)
-        king.move(new_king_position)
-        rook.move(new_rook_position)
-
-
     def make_a_move(self, move, in_notation=False):
         """
         Function handling the moves given as string in common chess notation
-        or coordinate-tuple.
+        or coordinate-tuple. Returning flags to handle the different outcomes.
 
-        If move allowed: return: True,
-
-        If wrong player made turn, ValueError with further specification is raised.
+        Returns:
+        ---------
+        move_successful: boolean
+            True if move was legal and did not end in putting own king in check.
+        remove_piece: boolean
+            True if move requires to remove another piece.
+        checkmate: boolean
+            True if move results in checkmate of the opponent.
+        castling: str, {'', 'short', 'long'}
+            Equals 'short' or 'long' if the move is one of these _castle moves.
+            Empty string otherwise.
         """
         start_pos, end_pos = None, None
-        need_to_remove_piece = False
-        checkmating_player = None
+        move_successful = False
+        remove_piece = False
+        checkmate = False
         piece_to_remove = None
         castling = ""
 
         # get coordinates of startfield and endfield
         if in_notation:
-            start_pos, end_pos = self.translate_from_notation(move)
+            start_pos, end_pos = translate_from_notation(move)
         else:
             start_pos = move[0]
             end_pos = move[1]
 
-        # get piece on start_position
         piece = self.chessboard.return_piece_on_field(start_pos)
-
         player = piece.color
         opponent = self.get_opponent(player)
 
-        # check if right player makes turn
         if player != self.which_players_turn:
             raise ValueError(f"Wrong player: {self.which_players_turn} has to move!")
 
-        # make move if succesfull
         if piece.move_is_legal(end_pos):
+            start_pos, castling, piece_to_remove, remove_piece = self._preprocess_move(piece, end_pos)
 
-            # check for piece on end-field
-            piece_to_remove = self.chessboard.return_piece_on_field(end_pos)
-            if piece_to_remove != None:
-                if piece_to_remove.color == piece.color:    # castling!
-                    castling = piece.check_for_castle(end_pos)
-                    self.castle(castling, piece, piece_to_remove)
-                else:
-                    self.pieces[opponent].remove(piece_to_remove)
-            if not castling:
-                piece.move(end_pos)
+            self._move_pieces(piece, start_pos, end_pos, castling, piece_to_remove)
 
-            if self.in_check(player):       # if putting yourself in check
-                piece.move(start_pos)               # revert move
-                if piece_to_remove != None:
-                    piece_to_remove.move(end_pos)   # put removed piece back
-                    if not castling:
-                        self.pieces[opponent].append(piece_to_remove)
-
-            else:   # move is allowed
-                if piece_to_remove != None:
-                    if not castling:
-                        need_to_remove_piece = True
-                        self.removed_pieces[opponent].append(piece_to_remove)
+            if self.in_check(player):
+                self._move_pieces_back(piece, start_pos, end_pos, castling, piece_to_remove)
+            else:
+                move_successful = True
                 piece.moved_once = True
                 self.change_turns(player)
-                # print(self.display_board())
+                # display_board()
 
                 if self.in_check(opponent):
-                    print('Putting other player in check')
+                    # print('Putting other player in check')
                     if self.its_checkmate(opponent):
-                        checkmating_player = player
-                return True, need_to_remove_piece, checkmating_player, castling
-                # move worked, piece that needs to be removed, if checkmate
-        return False, None, None, ""
+                        checkmate = True
+
+        return move_successful, remove_piece, checkmate, castling
 
     def change_turns(self, current_player):
         """Function switching player that has to move next."""
@@ -194,16 +107,9 @@ class Match():
         else:
             self.which_players_turn = "w"
 
-    @staticmethod
-    def get_opponent(player):
-        if player == 'w':
-            return 'b'
-        else:
-            return 'w'
-
     def get_king_position(self, player):
         for piece in self.pieces[player]:
-            if piece.Abbrevation == 'K':
+            if piece.type_code == 'K':
                 return piece.position
 
     def in_check(self, player):
@@ -221,7 +127,11 @@ class Match():
         return False # if no piece can take king
 
     def its_checkmate(self, losing_player):
-        """Function checking if player is in checkmate. (king cant be saved)"""
+        """Function checking if player is in checkmate. (king cant be saved).
+        Goes through every possible move of the losing player and checks if
+        ther is a move to get out of check."""
+        still_in_check = True
+
         king_pos = self.get_king_position(losing_player)
         winning_player = self.get_opponent(losing_player)
 
@@ -232,77 +142,85 @@ class Match():
                 fields.append((row, col))
 
         for piece in self.pieces[losing_player]:
-            for field in fields:                    # check each possible move
+            for field in fields:                # check each possible move
                 castling = ""
+                remove_piece = False
                 if piece.move_is_legal(field):
-                    start_pos = piece.position
-                    piece_to_remove = self.chessboard.return_piece_on_field(field)
+                    start_pos, castling, piece_to_remove, remove_piece = self._preprocess_move(piece, field)
+                    self._move_pieces(piece, start_pos, field, castling, piece_to_remove)
 
-                    if piece_to_remove != None:
-                        if piece_to_remove.color == piece.color:    # castling!
-                            castling = piece.check_for_castle(field)
-                            self.castle(castling, piece, piece_to_remove)
-                        else:
-                            self.pieces[winning_player].remove(piece_to_remove)
-                    if not castling:
-                        piece.move(field)
+                    # change flag if move gets loosing player out of check
+                    still_in_check = self.in_check(losing_player)
 
-                    if not self.in_check(losing_player):    # if moved out of check
-                        piece.move(start_pos)               # revert move
-                        if piece_to_remove != None:
-                            piece_to_remove.move(field)   # put removed piece back
-                            if piece_to_remove.color != piece.color: # not castling!
-                                self.pieces[winning_player].append(piece_to_remove)
+                    self._move_pieces_back(piece, start_pos, field, castling, piece_to_remove)
+
+                    if not still_in_check:
                         return False
-                    else:
-                        piece.move(start_pos)               # revert move
-                        if piece_to_remove != None:
-                            piece_to_remove.move(field)   # put removed piece back
-                            if piece_to_remove.color != piece.color: # not castling!
-                                self.pieces[winning_player].append(piece_to_remove)
 
-        print('##################################################\n' \
-              + 'Checkmate!\n' \
-              + '##################################################')
+        # no way out of check
         return True
 
-    def display_board(self):
-        """
-        Displays the chessboard with pieces on it as numpy array in terminal.
+    def _add_to_piece_list(self, piece):
+        color = piece.color
+        if piece in self.removed_pieces[color]:
+            self.removed_pieces[color].remove(piece)
+        self.pieces[color].append(piece)
 
-        "O" for empty white field
-        "X" for empty black field
-        "P-w" for white Pawn
-        "P-b" for black Pawn
-        "R-w" for white Rook
-        "R-b" for black Rook
-        "N-w" for white Knight
-        "N-b" for black Knight
-        "B-w" for white Bishop
-        "B-b" for black Bishop
-        "Q-w" for white Queen
-        "Q-b" for black Queen
-        "K-w" for white King
-        "K-b" for black King
-        """
-        full_board = []
+    def _remove_from_piece_list(self, piece):
+        color = piece.color
+        self.pieces[color].remove(piece)
+        self.removed_pieces[color].append(piece)
 
-        for row in range(8):
-            displayed_row = []
+    def _preprocess_move(self, piece, new_pos):
+        """Making the"""
+        start_pos = piece.position
+        castling = ""
+        remove_piece = False
+        piece_to_remove = self.chessboard.return_piece_on_field(new_pos)
 
-            for col in range(8):
-                displayed_as = ""
-                piece = self.chessboard.state[row][col]  # get piece or None
+        if piece_to_remove != None:
+            if piece_to_remove.color == piece.color:
+                castling = piece.check_for_castle(new_pos)
+            else:
+                remove_piece = True
 
-                if piece == None:
-                    if (row + col) % 2 == 0:
-                        displayed = " X "
-                    else:
-                        displayed = " O "
-                else:
-                    displayed = f"{piece.Abbrevation}-{piece.color}"
-                displayed_row.append(displayed)
-            full_board.append(displayed_row)
-        full_board.reverse()
+        return start_pos, castling, piece_to_remove, remove_piece
 
-        return(np.array(full_board))
+    def _move_pieces(self, piece, start_pos, new_pos, castling, piece_to_remove):
+        """Moving 'piece' from 'start_pos' to 'new_pos' (or castling)
+        and removing piece if it ways taken."""
+        if castling:
+            self._castle(castling, piece, piece_to_remove)
+        else:
+            if piece_to_remove:
+                self._remove_from_piece_list(piece_to_remove)
+            piece.move(new_pos)
+
+    def _castle(self, long_short, king, rook):
+        """Make move castle long or castle short."""
+        new_king_position = None
+        new_rook_position = None
+        if long_short == 'short':
+            new_king_position = (king.position[0], 6)
+            new_rook_position = (rook.position[0], 5)
+        elif long_short == 'long':
+            new_king_position = (king.position[0], 2)
+            new_rook_position = (rook.position[0], 3)
+        king.move(new_king_position)
+        rook.move(new_rook_position)
+
+    def _move_pieces_back(self, piece, start_pos, new_pos, castling, removed_piece):
+        """Reverting moving 'piece' from 'start_pos' to 'new_pos' (or castling)
+        and placing eventuelly removed piece back to original position."""
+        piece.move(start_pos)
+        if removed_piece:
+            removed_piece.move(new_pos)
+            if not castling:
+                self._add_to_piece_list(removed_piece)
+
+    @staticmethod
+    def get_opponent(player):
+        if player == 'w':
+            return 'b'
+        else:
+            return 'w'

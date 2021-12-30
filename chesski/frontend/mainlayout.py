@@ -70,4 +70,6 @@ class MainLayout(BoxLayout):
     def handle_checkmate(self, checkmating_player):
         for piece_widget in self.piece_widgets:
             piece_widget.disable_drag()
-        print(f"{checkmating_player} won.")
+        print('##################################################\n' \
+              + f'Checkmate! {checkmating_player} won.\n' \
+              + '##################################################')

@@ -7,9 +7,7 @@ from chesski.backend.game.pieces import Pawn
 class TestBoardSimple(unittest.TestCase):
 
     def test_initialize_state(self):
-        """
-        Initializing the state should yield empty board
-        """
+        # Test if Initializing the state yields empty board
         chessboard = ChessBoard() # empty state parameter initializes state
         correct_state = [
                             [None, None, None, None, None, None, None, None],
@@ -26,9 +24,7 @@ class TestBoardSimple(unittest.TestCase):
         self.assertEqual(correct_state, generated_state, errormessage)
 
     def test_place_piece_on_field(self):
-        """
-        Placing a piece on the chessboard should modify the state correctly.
-        """
+        # Test of placing a piece from the chessboard
         chessboard = ChessBoard()
         p1 = Pawn(position=(1, 3), color="w", chessboard=chessboard)
         correct_state = [
@@ -46,9 +42,7 @@ class TestBoardSimple(unittest.TestCase):
         self.assertEqual(correct_state, generated_state, errormessage)
 
     def test_remove_piece_of_state(self):
-        """
-        Removing a piece of the chessboard by passing in the position.
-        """
+        # Test of removing a piece from the chessboard
         chessboard = ChessBoard()
         p1 = Pawn(position=(1, 3), color="w", chessboard=chessboard)
         # pawn placed on (1, 3)
@@ -68,10 +62,6 @@ class TestBoardSimple(unittest.TestCase):
         self.assertEqual(correct_state, generated_state, errormessage)
 
     def test_piece_on_field(self):
-        """
-        Function should return the corresponding piece on field of specified
-        position.
-        """
         chessboard = ChessBoard()
         p1 = Pawn(position=(1, 3), color="w", chessboard=chessboard)
         # pawn placed on (1, 3)
@@ -108,9 +98,6 @@ class TestBoardKomplexPawn(unittest.TestCase):
 
 
     def test_pawn_placement_big(self):
-        """
-        All Pawns should be placed at their right position inside state.
-        """
         correct_state = [
     [   None,   None,    None,    None,    None,    None,      None,  None],
     [ self.p1, self.p2, self.p3, self.p4, self.p5, self.p6, self.p7, self.p8],
@@ -126,9 +113,6 @@ class TestBoardKomplexPawn(unittest.TestCase):
         self.assertEqual(correct_state, generated_state, errormessage)
 
     def test_pawn_movement_result_state_1(self):
-        """
-        Testing if moving a pawn correctly effects the state.
-        """
         self._check_and_move(self.p4, (3, 3))
         self._check_and_move(self.p5, (2, 4))
         self._check_and_move(self.p15, (4, 6))
@@ -149,10 +133,6 @@ class TestBoardKomplexPawn(unittest.TestCase):
         self.assertEqual(correct_state, generated_state, errormessage)
 
     def test_pawn_movement_result_state_2(self):
-        """
-        Testing if moving a pawn taking an opponents pawn (p8 taking p16)
-        correctly effects the state.
-        """
         self._check_and_move(self.p4, (3, 3))
         self._check_and_move(self.p5, (2, 4))
         self._check_and_move(self.p15, (4, 6))
@@ -176,10 +156,6 @@ class TestBoardKomplexPawn(unittest.TestCase):
         self.assertEqual(correct_state, generated_state, errormessage)
 
     def test_pawn_movement_result_state_illegal_1(self):
-        """
-        Testing if moving a pawn on field of already occupied field by another
-        pawn correctly effects the state.
-        """
         self._check_and_move(self.p4, (3, 3))
         self._check_and_move(self.p5, (2, 4))
         self._check_and_move(self.p15, (4, 6))
@@ -206,9 +182,6 @@ class TestBoardKomplexPawn(unittest.TestCase):
         self.assertEqual(correct_state, generated_state, errormessage)
 
     def test_pawn_movement_result_state_illegal_2(self):
-        """
-        Testing if moving a pawn off the field correctly effects the state.
-        """
         self._check_and_move(self.p4, (3, 3))
         self._check_and_move(self.p5, (2, 4))
         self._check_and_move(self.p15, (4, 6))

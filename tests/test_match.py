@@ -7,12 +7,6 @@ from chesski.backend.game.match import Match
 class TestMatchBasics(unittest.TestCase):
 
     def test_initiliaze_pieces(self):
-        """
-        Testing if all pieces are placed correctly in start position and if all
-        colors are correct.
-        Errormessage contains information about which pieces are
-        incorrect/missing.
-        """
         all_pieces_correct = ""
         match = Match()
         start_board = [
@@ -48,10 +42,6 @@ class TestMatchBasics(unittest.TestCase):
         self.assertEqual("", all_pieces_correct)
 
     def test_display_board(self):
-        """
-        Testing if all pieces are displayed at correct position with correct
-        color.
-        """
         match = Match()
         start_board_displayed = [
         ["R-b", "N-b", "B-b", "Q-b", "K-b", "B-b", "N-b", "R-b"],
