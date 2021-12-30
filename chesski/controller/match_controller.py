@@ -32,6 +32,18 @@ class MatchController:
 
         return type
 
+    def get_material_score(self):
+        """Return material score
+        Positive: White player has pieces with more combined value.
+        Negative: Black player has pieces with more combined value."""
+        score_white = 0
+        score_black = 0
+        for piece in self.match.pieces['w']:
+            score_white += piece.value
+        for piece in self.match.pieces['b']:
+            score_black += piece.value
+        return score_white - score_black
+
     def move_was_possible(self, last_coordinates, next_coordinates):
         """
         Makes a move on the backend board and informs the main_layout

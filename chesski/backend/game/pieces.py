@@ -7,6 +7,7 @@ class Piece():
         self.type_code = ''
         self.chessboard = chessboard
         self.moved_once = False
+        self.value = 0
 
         self.chessboard.place_on_board(self)
 
@@ -78,6 +79,7 @@ class Pawn(Piece):
     def __init__(self, position, color, chessboard):
         super().__init__(position, color, chessboard)
         self.type_code = "P"
+        self.value = 1
 
     def check_piece_rules(self, new_pos):
         """Returning True if moving pawn in specified way is allowed according
@@ -134,6 +136,7 @@ class Rook(Piece):
     def __init__(self, position, color, chessboard):
         super().__init__(position, color, chessboard)
         self.type_code = "R"
+        self.value = 5
 
     def check_piece_rules(self, new_pos):
         """
@@ -163,6 +166,7 @@ class Knight(Piece):
     def __init__(self, position, color, chessboard):
         super().__init__(position, color, chessboard)
         self.type_code = "N"
+        self.value = 3
 
     def check_piece_rules(self, new_pos):
         """
@@ -193,6 +197,7 @@ class Bishop(Piece):
     def __init__(self, position, color, chessboard):
         super().__init__(position, color, chessboard)
         self.type_code = "B"
+        self.value = 3
 
     def check_piece_rules(self, new_pos):
         """
@@ -223,6 +228,7 @@ class Queen(Piece):
     def __init__(self, position, color, chessboard):
         super().__init__(position, color, chessboard)
         self.type_code = "Q"
+        self.value = 5
 
     def check_piece_rules(self, new_pos):
         """
@@ -253,6 +259,7 @@ class King(Piece):
     def __init__(self, position, color, chessboard):
         super().__init__(position, color, chessboard)
         self.type_code = "K"
+        self.value = 0
 
     def check_piece_rules(self, new_pos):
         """

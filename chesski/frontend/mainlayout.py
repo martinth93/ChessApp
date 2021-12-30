@@ -6,6 +6,7 @@ from chesski.frontend.chesspiece import ChessPiece
 class MainLayout(BoxLayout):
     start_reset_button_text = StringProperty("Start")
     graphics_path = StringProperty('')
+    score_text = StringProperty('+0')
 
     piece_widgets = []
 
@@ -13,7 +14,6 @@ class MainLayout(BoxLayout):
         super().__init__(**kwargs)
         self.match_controller = match_controller
         self.match_controller.main_layout = self
-
 
     def start_game(self):
         """
@@ -52,6 +52,7 @@ class MainLayout(BoxLayout):
             )
         self.ids.game_box.add_widget(gui_piece)
         self.piece_widgets.append(gui_piece)
+        self.update_score_label()
 
 
     def remove_piece(self, coordinates):
@@ -66,6 +67,7 @@ class MainLayout(BoxLayout):
                 piece_to_remove = self.piece_widgets.pop(i)
                 self.ids.game_box.remove_widget(piece_to_remove)
                 print('piece removed')
+                self.update_score_label()
                 return
         raise ValueError('Piece to remove couldnt be found.')
 
@@ -75,3 +77,10 @@ class MainLayout(BoxLayout):
         print('##################################################\n' \
               + f'Checkmate! {checkmating_player} won.\n' \
               + '##################################################')
+
+    def update_score_label(self):
+        score = self.match_controller.get_material_score()
+        if score > 0:
+            self.score_text = "+" + str(score)
+        else:
+            self.score_text = str(score)

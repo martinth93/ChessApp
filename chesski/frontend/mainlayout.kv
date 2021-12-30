@@ -26,6 +26,11 @@
                 BoardGrid:
                     id: board_grid
                 # Here is where Chess Pieces are instantiated
-        Button:
-            text: 'A'
-            size_hint: .5, 1
+        BoxLayout:
+            orientation: 'vertical'
+            Label:
+                text: root.score_text
+                size_hint: .1, 1
+                background_color: 1, 0, 0, 1
+            Label:
+                text: 'moves'
