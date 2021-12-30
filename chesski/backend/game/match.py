@@ -105,6 +105,8 @@ class Match():
             # No Issue found
 
     def castle(self, long_short, king, rook):
+        new_king_position = None
+        new_rook_position = None
         if long_short == 'short':
             new_king_position = (king.position[0], 6)
             new_rook_position = (rook.position[0], 5)
@@ -113,15 +115,6 @@ class Match():
             new_rook_position = (rook.position[0], 3)
         king.move(new_king_position)
         rook.move(new_rook_position)
-
-    def revert_castle(self, long_short, king, rook):
-        old_king_position = (king.position[0], 4)
-        if long_short == 'short':
-            old_rook_position = (rook.position[0], 7)
-        elif long_short == 'long':
-            old_rook_position = (rook.position[0], 0)
-        king.move(old_king_position)
-        rook.move(old_rook_position)
 
 
     def make_a_move(self, move, in_notation=False):
@@ -240,6 +233,7 @@ class Match():
 
         for piece in self.pieces[losing_player]:
             for field in fields:                    # check each possible move
+                castling = ""
                 if piece.move_is_legal(field):
                     start_pos = piece.position
                     piece_to_remove = self.chessboard.return_piece_on_field(field)

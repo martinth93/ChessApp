@@ -77,13 +77,11 @@ class Piece():
         # Checking if there is a piece on end_pos
 
         if piece_to_remove != None:
-            if self.Abbrevation == 'K':
-                if self.check_for_castle(end_pos):
-                    return # don't raise error if castling
-
-            elif piece_to_remove.color == self.color:
+            if piece_to_remove.color == self.color:
+                if self.Abbrevation == 'K':
+                    if self.check_for_castle(end_pos):
+                        return # don't raise error if castling
                 raise ValueError('Move failed: Field blocked by another same-colored piece.')
-                # if trying to move on field with own piece on it
 
 
 # ----------------------------- Classes of Chess Pieces -----------------------
