@@ -20,7 +20,7 @@ class TestPiece(unittest.TestCase):
 
         if piece_move:
             if piece.move_is_legal(piece_move):
-                piece.move(end_pos=piece_move)
+                piece.move(new_pos=piece_move)
 
         generated_output = piece.display()
         self.assertEqual(piece_output, generated_output)

@@ -28,15 +28,17 @@ class MainLayout(BoxLayout):
         self.match_controller.init_match()
 
         # setup pieces
-        for color, abbrevation, position \
-        in self.match_controller.get_pieces_on_board():
-            type = f'{color}_{abbrevation}'
-            self.display_piece(type, position)
+        for row in range(8):
+            for col in range(8):
+                position = (row, col)
+                type = self.match_controller.get_piece_type_from_state(position)
+                if type != None:
+                    self.add_piece(type, position)
 
         # change start/reset button text
         self.start_reset_button_text = 'Reset'
 
-    def display_piece(self, type, position):
+    def add_piece(self, type, position):
         """
         Instantiates the Chesspiece UI-Element and add id as
         child-widget of the game-box.

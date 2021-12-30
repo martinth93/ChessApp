@@ -42,7 +42,7 @@ class Match():
                                                     chessboard=self.chessboard)
                     self.pieces[color].append(new_piece)
 
-    def make_a_move(self, move, in_notation=False):
+    def make_a_move(self, move, in_notation=False, promote_to="Q"):
         """
         Function handling the moves given as string in common chess notation
         or coordinate-tuple. Returning flags to handle the different outcomes.
@@ -59,19 +59,22 @@ class Match():
             Equals 'short' or 'long' if the move is one of these _castle moves.
             Empty string otherwise.
         """
-        start_pos, end_pos = None, None
+        # flags
         move_successful = False
         remove_piece = False
         checkmate = False
-        piece_to_remove = None
+        promotion = False
         castling = ""
+
+        start_pos, new_pos = None, None
+        piece_to_remove = None
 
         # get coordinates of startfield and endfield
         if in_notation:
-            start_pos, end_pos = translate_from_notation(move)
+            start_pos, new_pos = translate_from_notation(move)
         else:
             start_pos = move[0]
-            end_pos = move[1]
+            new_pos = move[1]
 
         piece = self.chessboard.return_piece_on_field(start_pos)
         player = piece.color
@@ -80,25 +83,44 @@ class Match():
         if player != self.which_players_turn:
             raise ValueError(f"Wrong player: {self.which_players_turn} has to move!")
 
-        if piece.move_is_legal(end_pos):
-            start_pos, castling, piece_to_remove, remove_piece = self._preprocess_move(piece, end_pos)
+        if piece.move_is_legal(new_pos):
+            start_pos, castling, piece_to_remove, remove_piece = self._preprocess_move(piece, new_pos)
 
-            self._move_pieces(piece, start_pos, end_pos, castling, piece_to_remove)
+            self._move_pieces(piece, start_pos, new_pos, castling, piece_to_remove)
 
             if self.in_check(player):
-                self._move_pieces_back(piece, start_pos, end_pos, castling, piece_to_remove)
+                self._move_pieces_back(piece, start_pos, new_pos, castling, piece_to_remove)
             else:
                 move_successful = True
                 piece.moved_once = True
                 self.change_turns(player)
                 # display_board()
 
+                if piece.type_code == 'P' and new_pos[0] % 7 == 0:
+                    piece = self.promote_pawn(piece, promote_to)
+                    promotion = True
+
                 if self.in_check(opponent):
                     # print('Putting other player in check')
                     if self.its_checkmate(opponent):
                         checkmate = True
 
-        return move_successful, remove_piece, checkmate, castling
+        return move_successful, remove_piece, checkmate, castling, promotion
+
+    def promote_pawn(self, pawn, promote_to):
+        """Removes the pawn from the board and replaces it with specified Piece."""
+        promotion_options = {"R": Rook, "N": Knight, "B": Bishop, "Q": Queen}
+        promotion_type = promotion_options[promote_to]
+
+        position = pawn.position
+        color = pawn.color
+
+        self.pieces[color].remove(pawn)
+        new_piece = promotion_type(position, color, self.chessboard)
+        self.pieces[color].append(new_piece)
+
+        return new_piece
+
 
     def change_turns(self, current_player):
         """Function switching player that has to move next."""

@@ -98,3 +98,4 @@ def display_board(match):
     full_board.reverse()
 
     print(np.array(full_board))
+    return np.array(full_board)

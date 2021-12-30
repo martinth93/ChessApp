@@ -14,27 +14,23 @@ class MatchController:
         self.game_over = False
         self.match = Match()
 
-    def _get_board_state(self):
+    def get_piece_type_from_state(self, position):
         """
-        get the state of the backend-board.
+        Returning the piece type as ui type (e.g. b_R for "black Rook") at
+        specified position in state.
         """
-        return self.match.chessboard.state
+        row = position[0]
+        col = position[1]
+        piece = self.match.chessboard.state[row][col]
+        if piece == None:
+            return None
+        color = piece.color
+        code = piece.type_code
+        position = piece.position
 
-    def get_pieces_on_board(self):
-        """
-        Returning all pieces on the backend-board with piece-type,
-        position and color.
-        Those have to be displayed on the ui-board.
-        """
-        pieces = []
-        for row in self._get_board_state():
-            for piece in row:
-                if piece != None:
-                    color = piece.color
-                    abbrev = piece.type_code
-                    position = piece.position
-                    pieces.append((color, abbrev, position))
-        return pieces
+        type = f'{color}_{code}'
+
+        return type
 
     def move_was_possible(self, last_coordinates, next_coordinates):
         """
@@ -47,11 +43,10 @@ class MatchController:
         current_player = self.get_current_player()
 
         try:
-            move_worked, piece_removal, checkmate, castling = self.match.make_a_move(move)
+            move_flags = self.match.make_a_move(move)
+            move_worked, piece_removal, checkmate, castling, promotion = move_flags
             if move_worked:
-                if piece_removal:
-                    self.main_layout.remove_piece(next_coordinates)
-                elif castling:
+                if castling:
                     self.main_layout.remove_piece(next_coordinates)
                     self.main_layout.remove_piece(last_coordinates)
                     type_king = f'{current_player}_K'
@@ -63,9 +58,18 @@ class MatchController:
                     elif castling == 'long':
                         new_king_position = (row, 2)
                         new_rook_position = (row, 3)
-                    self.main_layout.display_piece(type_rook, new_rook_position)
-                    self.main_layout.display_piece(type_king, new_king_position)
+                    self.main_layout.add_piece(type_rook, new_rook_position)
+                    self.main_layout.add_piece(type_king, new_king_position)
                     print("castled")
+                elif promotion:
+                    if piece_removal:
+                        self.main_layout.remove_piece(next_coordinates)
+                    self.main_layout.remove_piece(last_coordinates)
+                    type = self.get_piece_type_from_state(next_coordinates)
+                    self.main_layout.add_piece(type, next_coordinates)
+                elif piece_removal:
+                    self.main_layout.remove_piece(next_coordinates)
+
 
                 if checkmate:
                     self.main_layout.handle_checkmate(current_player)

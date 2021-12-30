@@ -3,6 +3,7 @@ import unittest
 from chesski.backend.game.board import ChessBoard
 from chesski.backend.game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 from chesski.backend.game.match import Match
+from chesski.backend.game.helper_functions import display_board
 
 class TestMatchBasics(unittest.TestCase):
 
@@ -53,5 +54,5 @@ class TestMatchBasics(unittest.TestCase):
         ["P-w", "P-w", "P-w", "P-w", "P-w", "P-w", "P-w", "P-w"],
         ["R-w", "N-w", "B-w", "Q-w", "K-w", "B-w", "N-w", "R-w"]
         ]
-        generated_display = match.display_board().tolist()
+        generated_display = display_board(match).tolist()
         self.assertEqual(generated_display, start_board_displayed)
