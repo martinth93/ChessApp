@@ -17,6 +17,8 @@ class MainLayout(BoxLayout):
         super().__init__(**kwargs)
         self.match_controller = match_controller
         self.match_controller.main_layout = self
+        self.black_stack = self.ids.player_display.ids.black_stack
+        self.white_stack = self.ids.player_display.ids.white_stack
 
     def start_game(self):
         """
@@ -40,6 +42,8 @@ class MainLayout(BoxLayout):
 
         # change start/reset button text
         self.start_reset_button_text = 'Reset'
+        self.move_notations_text = ''
+        self.clear_stacks()
 
     def add_piece(self, type, position):
         """
@@ -75,9 +79,9 @@ class MainLayout(BoxLayout):
                     image_path = piece_to_remove.source
                     new_image = Image(source=image_path, size_hint=(.05, 1))
                     if image_path[-7] == 'w':
-                        self.ids.player_display.ids.black_stack.add_widget(new_image)
+                        self.black_stack.add_widget(new_image)
                     else:
-                        self.ids.player_display.ids.white_stack.add_widget(new_image)
+                        self.white_stack.add_widget(new_image)
                 return
         raise ValueError('Piece to remove couldnt be found.')
 
@@ -103,3 +107,7 @@ class MainLayout(BoxLayout):
             color_code = '000000'
         text = str(move_count) + '.' + move_in_notation + ',  '
         self.move_notations_text += f'[color={color_code}]' + text + '[/color]'
+
+    def clear_stacks(self):
+        self.white_stack.clear_widgets()
+        self.black_stack.clear_widgets()

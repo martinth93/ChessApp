@@ -42,10 +42,9 @@
                     id: board_grid
                 # Here is where Chess Pieces are instantiated
         BoxLayout:
+            padding: dp(20)
             orientation: 'vertical'
-            PlayerDisplay:
-                id: player_display
-            Label:
+            Label:  # move notation display
                 canvas.before:
                     Color:
                         rgba: 1, 1, 1, .2
@@ -62,3 +61,6 @@
                 font_size: max(dp(10), self.height/13 - dp(20))
                 text_size: (self.width-dp(20), self.height-dp(20))
                 valign: 'top'
+
+            PlayerDisplay:
+                id: player_display
