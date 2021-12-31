@@ -97,7 +97,7 @@ class ChessPiece(DragBehavior, Image):
                 if (next_coordinates != None and
                     self.match_controller.move_was_possible(*move)):
                     self.move_to_coordinates(next_coordinates)
-                    # print('move made!', next_coordinates)
+                    print('move made!', next_coordinates)
 
                 else: # move back
                     self.move_to_coordinates(self.last_coordinates)

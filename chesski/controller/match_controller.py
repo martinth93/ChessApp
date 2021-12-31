@@ -1,4 +1,7 @@
 from chesski.backend.game.match import Match
+from chesski.backend.game.move import Move
+
+from chesski.backend.game.helper_functions import translate_to_notation
 
 class MatchController:
 
@@ -53,54 +56,52 @@ class MatchController:
         Also handles if a move was made on the ui-board, that is not
         allowed according to the rules implemented in the backend.
         """
-        move = (last_coordinates, next_coordinates)
+        move = Move(last_coordinates, next_coordinates)
         current_player = self.get_current_player()
 
         try:
-            move_flags = self.match.make_a_move(move)
-            move_worked, piece_removal, checkmate, \
-            castling, promotion, move_in_notation = move_flags
-            if move_worked:
-                if castling:
+            if self.match.make_a_move(move):
+                print('1')
+                if move.castling:
                     self.main_layout.remove_piece(next_coordinates, to_stack=False)
                     self.main_layout.remove_piece(last_coordinates, to_stack=False)
                     type_king = f'{current_player}_K'
                     type_rook = f'{current_player}_R'
                     row = last_coordinates[0]
-                    if castling == 'short':
+                    if move.castling == 'short':
                         new_king_position = (row, 6)
                         new_rook_position = (row, 5)
-                    elif castling == 'long':
+                    elif move.castling == 'long':
                         new_king_position = (row, 2)
                         new_rook_position = (row, 3)
                     self.main_layout.add_piece(type_rook, new_rook_position)
                     self.main_layout.add_piece(type_king, new_king_position)
                     print("castled")
-                elif promotion:
-                    if piece_removal:
+                elif move.promotion:
+                    if move.taking_piece:
                         self.main_layout.remove_piece(next_coordinates)
                     self.main_layout.remove_piece(last_coordinates, to_stack=False)
                     type = self.get_piece_type_from_state(next_coordinates)
                     self.main_layout.add_piece(type, next_coordinates)
-                elif piece_removal:
+                elif move.taking_piece:
                     self.main_layout.remove_piece(next_coordinates)
 
-
-                if checkmate:
+                if move.delivering_checkmate:
                     self.main_layout.handle_checkmate(current_player)
                     self.game_over = True
 
                 self.move_count += 1
+                move_in_notation = translate_to_notation(self.match, move)
                 self.main_layout.update_move_text(move_in_notation,
                                                   self.move_count,
                                                   current_player)
-
-            return move_worked
-
+                return True
+            else:
+                return False
         # handling if wrong player made turn
         except ValueError as e:
-            # print(e)
+            print(e)
             return False
 
     def get_current_player(self):
-        return self.match.which_players_turn
+        return self.match.current_player

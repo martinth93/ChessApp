@@ -1,5 +1,6 @@
 from chesski.backend.game.board import ChessBoard
 from chesski.backend.game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
+from chesski.backend.game.move import Move
 
 from chesski.backend.game.helper_functions import (translate_from_notation,
                                         display_board, translate_to_notation)
@@ -7,9 +8,9 @@ from chesski.backend.game.helper_functions import (translate_from_notation,
 class Match():
     """A class setting up Board and Pieces and Managing Moves."""
 
-    def __init__(self, chessboard=None, which_players_turn = 'w'):
+    def __init__(self, chessboard=None, current_player = 'w'):
 
-        self.which_players_turn = which_players_turn
+        self.current_player = current_player
         self.pieces = {'w': [], 'b': []}
         self.removed_pieces = {'w': [], 'b': []}
 
@@ -43,82 +44,84 @@ class Match():
                                                     chessboard=self.chessboard)
                     self.pieces[color].append(new_piece)
 
+    def move_is_legal(self, move):
+        """Checking a move for check-related rules by simulating the move and
+        reverting it after.
+        - checking if putting yourself in check
+        """
+
+        start_pos = move.start_pos
+        new_pos = move.end_pos
+        piece = self.chessboard.return_piece_on_field(move.start_pos)
+        player = piece.color
+        opponent = self.get_opponent(player)
+        checking_yourself = False
+
+        if piece.move_is_pseudo_legal(move):
+            # make the move
+            if move.castling:
+                self._castle(move, piece)
+            else:
+                if move.taking_piece:
+                    self._remove_from_piece_list(move.taking_piece)
+                piece.move(move)
+
+            #  if player now in check
+            if self.in_check(player):
+                checking_yourself = True
+
+            # revert move
+            piece.move(move, reverse=True)
+            if move.taking_piece:
+                move.taking_piece.move(move)
+                if not move.castling:
+                    self._add_to_piece_list(move.taking_piece)
+
+            if not checking_yourself:
+                return True
+
+        return False
+
     def make_a_move(self, move, as_notation=False, promote_to="Q"):
         """
         Function handling the moves given as string in common chess notation
-        or coordinate-tuple. Returning flags to handle the different outcomes.
-
-        Returns:
-        ---------
-        move_successful: boolean
-            True if move was legal and did not end in putting own king in check.
-        remove_piece: boolean
-            True if move requires to remove another piece.
-        checkmate: boolean
-            True if move results in checkmate of the opponent.
-        castling: str, {'', 'short', 'long'}
-            Equals 'short' or 'long' if the move is one of these _castle moves.
-            Empty string otherwise.
-        promotion: boolean
-            True if move ends in promotion of a pawn.
-        move_notation: str
-            Move translated to notation.
+        or coordinate-tuple. Returning Move instance with all flags set
+        to handle the different outcomes.
         """
-        # flags
-        move_successful = False
-        remove_piece = False
-        checkmate = False
-        promotion = False
-        castling = ""
-        move_notation = ""
-
-        start_pos, new_pos = None, None
-        piece_to_remove = None
-
         # get coordinates of startfield and endfield
         if as_notation:
-            start_pos, new_pos = translate_from_notation(move)
-        else:
-            start_pos = move[0]
-            new_pos = move[1]
+            move = translate_from_notation(move)
 
-        piece = self.chessboard.return_piece_on_field(start_pos)
-        player = piece.color
-        opponent = self.get_opponent(player)
+        piece = self.chessboard.return_piece_on_field(move.start_pos)
 
-        if player != self.which_players_turn:
-            raise ValueError(f"Wrong player: {self.which_players_turn} has to move!")
+        if piece.color != self.current_player:
+            raise ValueError(f"Wrong player: {self.current_player} has to move!")
 
-        if piece.move_is_legal(new_pos):
-            move_notation = translate_to_notation(self, move)
-            start_pos, castling, piece_to_remove, remove_piece = self._preprocess_move(piece, new_pos)
-
-            self._move_pieces(piece, start_pos, new_pos, castling, piece_to_remove)
-
-            if self.in_check(player):
-                self._move_pieces_back(piece, start_pos, new_pos, castling, piece_to_remove)
+        if self.move_is_legal(move):
+            # make move
+            if move.castling:
+                self._castle(move, piece)
             else:
-                move_successful = True
-                piece.moved_once = True
-                self.change_turns(player)
-                # display_board()
+                if move.taking_piece:
+                    self._remove_from_piece_list(move.taking_piece)
+                piece.move(move)
 
-                if piece.type_code == 'P' and new_pos[0] % 7 == 0:
-                    piece = self.promote_pawn(piece, promote_to)
-                    promotion = True
-                    move_notation += promote_to
-
-                if self.in_check(opponent):
-                    # print('Putting other player in check')
-                    if self.its_checkmate(opponent):
-                        checkmate = True
-                        move_notation += '#'
-                    else:
-                        move_notation += '+'
+            piece.moved_once = True
+            self.change_turns()
 
 
-        return (move_successful, remove_piece, checkmate,
-                castling, promotion, move_notation)
+            # setting move's promotion and deliver_check/checkmate flags
+            if piece.type_code == 'P' and move.end_pos[0] % 7 == 0:
+                piece = self.promote_pawn(piece, promote_to)
+                move.promotion = True
+            if self.in_check(self.current_player):
+                move.delivering_check = True
+                if self.its_checkmate(self.current_player):
+                    move.delivering_checkmate = True
+
+            display_board(self)
+            return True
+        return False
 
     def promote_pawn(self, pawn, promote_to):
         """Removes the pawn from the board and replaces it with specified Piece."""
@@ -134,13 +137,12 @@ class Match():
 
         return new_piece
 
-
-    def change_turns(self, current_player):
+    def change_turns(self):
         """Function switching player that has to move next."""
-        if current_player == "w":
-            self.which_players_turn = "b"
+        if self.current_player == "w":
+            self.current_player = "b"
         else:
-            self.which_players_turn = "w"
+            self.current_player = "w"
 
     def get_king_position(self, player):
         for piece in self.pieces[player]:
@@ -154,7 +156,8 @@ class Match():
 
         # print('Checking If Move would put player in check:')
         for opponent_piece in self.pieces[opponent]:
-            if opponent_piece.move_is_legal(king_pos):
+            temp_move = Move(opponent_piece.position, king_pos)
+            if opponent_piece.move_is_pseudo_legal(temp_move):
                 # print('Checking Move was found!')
                 return True
 
@@ -165,8 +168,6 @@ class Match():
         """Function checking if player is in checkmate. (king cant be saved).
         Goes through every possible move of the losing player and checks if
         ther is a move to get out of check."""
-        still_in_check = True
-
         king_pos = self.get_king_position(losing_player)
         winning_player = self.get_opponent(losing_player)
 
@@ -178,18 +179,36 @@ class Match():
 
         for piece in self.pieces[losing_player]:
             for field in fields:                # check each possible move
-                castling = ""
-                remove_piece = False
-                if piece.move_is_legal(field):
-                    start_pos, castling, piece_to_remove, remove_piece = self._preprocess_move(piece, field)
-                    self._move_pieces(piece, start_pos, field, castling, piece_to_remove)
+                temp_move = Move(piece.position, field)
+                still_in_check = True
+                legal_move = True
+
+                if piece.move_is_pseudo_legal(temp_move):
+
+                    # make the move
+                    if temp_move.castling:
+                        self._castle(temp_move, piece)
+                    else:
+                        if temp_move.taking_piece:
+                            self._remove_from_piece_list(temp_move.taking_piece)
+                        piece.move(temp_move)
+
+                    #  if putting self in check
+                    if self.in_check(winning_player):
+                        legal_move = False
 
                     # change flag if move gets loosing player out of check
-                    still_in_check = self.in_check(losing_player)
+                    if not self.in_check(losing_player):
+                        still_in_check = False
 
-                    self._move_pieces_back(piece, start_pos, field, castling, piece_to_remove)
+                    # revert move
+                    piece.move(temp_move, reverse=True)
+                    if temp_move.taking_piece:
+                        temp_move.taking_piece.move(temp_move)
+                        if not temp_move.castling:
+                            self._add_to_piece_list(temp_move.taking_piece)
 
-                    if not still_in_check:
+                    if not still_in_check and legal_move:
                         return False
 
         # no way out of check
@@ -231,18 +250,20 @@ class Match():
                 self._remove_from_piece_list(piece_to_remove)
             piece.move(new_pos)
 
-    def _castle(self, long_short, king, rook):
+    def _castle(self, move, king):
         """Make move castle long or castle short."""
+        rook = move.taking_piece
         new_king_position = None
         new_rook_position = None
-        if long_short == 'short':
-            new_king_position = (king.position[0], 6)
-            new_rook_position = (rook.position[0], 5)
-        elif long_short == 'long':
-            new_king_position = (king.position[0], 2)
-            new_rook_position = (rook.position[0], 3)
-        king.move(new_king_position)
-        rook.move(new_rook_position)
+        row = king.position[0]
+        if move.castling == 'short':
+            new_king_position = (row, 6)
+            new_rook_position = (row, 5)
+        else: # long
+            new_king_position = (row, 2)
+            new_rook_position = (row, 3)
+        king.move(Move(king.position, new_king_position))
+        rook.move(Move(rook.position, new_rook_position))
 
     def _move_pieces_back(self, piece, start_pos, new_pos, castling, removed_piece):
         """Reverting moving 'piece' from 'start_pos' to 'new_pos' (or castling)
