@@ -32,7 +32,7 @@ class MatchController:
 
         return type
 
-    def get_material_score(self):
+    def get_material_difference(self):
         """Return material score
         Positive: White player has pieces with more combined value.
         Negative: Black player has pieces with more combined value."""

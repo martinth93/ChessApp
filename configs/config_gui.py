@@ -18,6 +18,7 @@ Builder.load_file('chesski/frontend/mainlayout.kv')
 Builder.load_file('chesski/frontend/gamelayout.kv')
 Builder.load_file('chesski/frontend/boardgrid.kv')
 Builder.load_file('chesski/frontend/chesspiece.kv')
+Builder.load_file('chesski/frontend/playerdisplay.kv')
 
 # setting path to graphics
 # graphics of board and pieces have to be in a folder called chessboard_and_pieces

@@ -228,7 +228,7 @@ class Queen(Piece):
     def __init__(self, position, color, chessboard):
         super().__init__(position, color, chessboard)
         self.type_code = "Q"
-        self.value = 5
+        self.value = 9
 
     def check_piece_rules(self, new_pos):
         """

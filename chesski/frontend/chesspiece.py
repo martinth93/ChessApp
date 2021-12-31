@@ -41,6 +41,10 @@ class ChessPiece(DragBehavior, Image):
         self.move_to_coordinates(self.starting_coordinates)
         self.opacity=1
 
+    def on_size(self, *args):
+        self.move_to_coordinates(self.last_coordinates)
+        self.drag_rectangle = (self.board.x, self.board.y,
+                               self.board.width, self.board.height)
 
     def on_touch_down(self, touch):
         """

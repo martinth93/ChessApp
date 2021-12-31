@@ -1,23 +1,38 @@
-# BoxLayout
-<MainLayout>:
+#:set font_path '/fonts/Eurostile.ttf'
+#:set font_title '/fonts/Plaguard-ZVnjx.otf'
 
+<MainLayout>:
+    canvas:
+        Color:
+            rgb: .107, .115, .137
+        Rectangle:
+            size: self.size
     orientation: 'vertical'
     BoxLayout
         size_hint: 1, .1
         Label:
-            text: 'The worst chess engine'
+            markup: True
+            text: 'The worst chess engine [size=15]V.0.1[/size]'
             size_hint: .8, 1
-            font_size: max(dp(15), self.height - dp(20))
+            font_size: max(dp(15), self.height - dp(15))
+            font_name: root.graphics_path + font_title
         Button:
             text: root.start_reset_button_text
             size_hint: .1, 1
             font_size: max(dp(15), self.height - dp(20))
+            font_name: root.graphics_path + font_path
             on_press: root.start_game()
+            background_color: .3, .5, .75
     BoxLayout:
         id: main_container
         orientation: 'horizontal'
         RelativeLayout:
             id: game_container
+            canvas:
+                Color:
+                    rgba: 1, 1, 1, .05
+                Rectangle:
+                    size: self.size
             GameLayout:
                 id: game_box
                 graphics_path: root.graphics_path
@@ -28,9 +43,6 @@
                 # Here is where Chess Pieces are instantiated
         BoxLayout:
             orientation: 'vertical'
-            Label:
-                text: root.score_text
-                size_hint: .1, 1
-                background_color: 1, 0, 0, 1
+            PlayerDisplay:
             Label:
                 text: 'moves'

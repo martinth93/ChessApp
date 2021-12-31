@@ -6,7 +6,8 @@ from chesski.frontend.chesspiece import ChessPiece
 class MainLayout(BoxLayout):
     start_reset_button_text = StringProperty("Start")
     graphics_path = StringProperty('')
-    score_text = StringProperty('+0')
+    white_material_text = StringProperty('')
+    black_material_text = StringProperty('')
 
     piece_widgets = []
 
@@ -52,7 +53,7 @@ class MainLayout(BoxLayout):
             )
         self.ids.game_box.add_widget(gui_piece)
         self.piece_widgets.append(gui_piece)
-        self.update_score_label()
+        self.update_material_text()
 
 
     def remove_piece(self, coordinates):
@@ -67,7 +68,7 @@ class MainLayout(BoxLayout):
                 piece_to_remove = self.piece_widgets.pop(i)
                 self.ids.game_box.remove_widget(piece_to_remove)
                 print('piece removed')
-                self.update_score_label()
+                self.update_material_text()
                 return
         raise ValueError('Piece to remove couldnt be found.')
 
@@ -78,9 +79,11 @@ class MainLayout(BoxLayout):
               + f'Checkmate! {checkmating_player} won.\n' \
               + '##################################################')
 
-    def update_score_label(self):
-        score = self.match_controller.get_material_score()
+    def update_material_text(self):
+        score = self.match_controller.get_material_difference()
+        self.white_material_text = ''
+        self.black_material_text = ''
         if score > 0:
-            self.score_text = "+" + str(score)
-        else:
-            self.score_text = str(score)
+            self.white_material_text = '+' + str(score)
+        elif score < 0:
+            self.black_material_text = '+' + str(-score)

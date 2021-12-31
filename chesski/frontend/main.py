@@ -17,6 +17,8 @@ from kivy.lang import Builder
 Builder.load_file('mainlayout.kv')
 Builder.load_file('gamelayout.kv')
 Builder.load_file('boardgrid.kv')
+Builder.load_file('chesspiece.kv')
+Builder.load_file('playerdisplay.kv')
 
 class ChessApp(App):
     def build(self):
