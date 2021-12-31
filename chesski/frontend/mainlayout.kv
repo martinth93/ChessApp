@@ -44,5 +44,21 @@
         BoxLayout:
             orientation: 'vertical'
             PlayerDisplay:
+                id: player_display
             Label:
-                text: 'moves'
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, .2
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+                    Color:
+                        rgba: 0, 0, 0, 1
+                    Line:
+                        width: 2
+                        rectangle: self.x, self.y, self.width, self.height
+                markup: True
+                text: root.move_notations_text
+                font_size: max(dp(10), self.height/13 - dp(20))
+                text_size: (self.width-dp(20), self.height-dp(20))
+                valign: 'top'

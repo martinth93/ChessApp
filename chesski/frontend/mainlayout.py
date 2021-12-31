@@ -1,5 +1,6 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty
+from kivy.uix.image import Image
 
 from chesski.frontend.chesspiece import ChessPiece
 
@@ -8,6 +9,7 @@ class MainLayout(BoxLayout):
     graphics_path = StringProperty('')
     white_material_text = StringProperty('')
     black_material_text = StringProperty('')
+    move_notations_text = StringProperty('')
 
     piece_widgets = []
 
@@ -56,7 +58,7 @@ class MainLayout(BoxLayout):
         self.update_material_text()
 
 
-    def remove_piece(self, coordinates):
+    def remove_piece(self, coordinates, to_stack=True):
         """
         Removes a piece on a given coordiante.
         """
@@ -69,6 +71,13 @@ class MainLayout(BoxLayout):
                 self.ids.game_box.remove_widget(piece_to_remove)
                 print('piece removed')
                 self.update_material_text()
+                if to_stack:
+                    image_path = piece_to_remove.source
+                    new_image = Image(source=image_path, size_hint=(.05, 1))
+                    if image_path[-7] == 'w':
+                        self.ids.player_display.ids.black_stack.add_widget(new_image)
+                    else:
+                        self.ids.player_display.ids.white_stack.add_widget(new_image)
                 return
         raise ValueError('Piece to remove couldnt be found.')
 
@@ -87,3 +96,10 @@ class MainLayout(BoxLayout):
             self.white_material_text = '+' + str(score)
         elif score < 0:
             self.black_material_text = '+' + str(-score)
+
+    def update_move_text(self, move_in_notation, move_count, color):
+        color_code = 'ffffff'
+        if color == 'b':
+            color_code = '000000'
+        text = str(move_count) + '.' + move_in_notation + ',  '
+        self.move_notations_text += f'[color={color_code}]' + text + '[/color]'

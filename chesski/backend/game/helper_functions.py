@@ -57,6 +57,48 @@ def translate_from_notation(match, move):
         # No Issue found
 
 
+def translate_to_notation(match, move):
+    """Translates move to notation with the help of specified flags.
+    Legality of move has to be checked beforehand and move not made."""
+    notation = ""
+    letters = 'abcdefgh'
+    start_pos = move[0]
+    new_pos = move[1]
+
+    piece = match.chessboard.return_piece_on_field(start_pos)
+    piece_to_remove = match.chessboard.return_piece_on_field(new_pos)
+
+    color = piece.color
+
+    if piece_to_remove:
+        if color == piece_to_remove.color:  # only possible when castling
+            if piece.check_for_castle(new_pos) == 'short':
+                return 'O-O'
+            else:
+                return 'O-O-O'
+
+    type_code = piece.type_code
+    if type_code != 'P':
+        notation += type_code
+
+    for other_piece in match.pieces[color]:
+        if other_piece == piece:
+            continue
+        if other_piece.type_code == type_code and other_piece.move_is_legal(new_pos):
+            notation += letters[start_pos[1]]
+            if other_piece.position[1] == piece.position[1]:
+                notation += str(start_pos[0] + 1)
+
+    if piece_to_remove:
+        if type_code == 'P' and len(notation)==0:
+            notation += letters[start_pos[1]]
+        notation += 'x'
+
+    notation += letters[new_pos[1]]
+    notation += str(new_pos[0]+1)
+
+    return notation
+
 
 def display_board(match):
     """

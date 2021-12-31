@@ -1,7 +1,8 @@
 from chesski.backend.game.board import ChessBoard
 from chesski.backend.game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 
-from chesski.backend.game.helper_functions import translate_from_notation, display_board
+from chesski.backend.game.helper_functions import (translate_from_notation,
+                                        display_board, translate_to_notation)
 
 class Match():
     """A class setting up Board and Pieces and Managing Moves."""
@@ -42,7 +43,7 @@ class Match():
                                                     chessboard=self.chessboard)
                     self.pieces[color].append(new_piece)
 
-    def make_a_move(self, move, in_notation=False, promote_to="Q"):
+    def make_a_move(self, move, as_notation=False, promote_to="Q"):
         """
         Function handling the moves given as string in common chess notation
         or coordinate-tuple. Returning flags to handle the different outcomes.
@@ -58,6 +59,10 @@ class Match():
         castling: str, {'', 'short', 'long'}
             Equals 'short' or 'long' if the move is one of these _castle moves.
             Empty string otherwise.
+        promotion: boolean
+            True if move ends in promotion of a pawn.
+        move_notation: str
+            Move translated to notation.
         """
         # flags
         move_successful = False
@@ -65,12 +70,13 @@ class Match():
         checkmate = False
         promotion = False
         castling = ""
+        move_notation = ""
 
         start_pos, new_pos = None, None
         piece_to_remove = None
 
         # get coordinates of startfield and endfield
-        if in_notation:
+        if as_notation:
             start_pos, new_pos = translate_from_notation(move)
         else:
             start_pos = move[0]
@@ -84,6 +90,7 @@ class Match():
             raise ValueError(f"Wrong player: {self.which_players_turn} has to move!")
 
         if piece.move_is_legal(new_pos):
+            move_notation = translate_to_notation(self, move)
             start_pos, castling, piece_to_remove, remove_piece = self._preprocess_move(piece, new_pos)
 
             self._move_pieces(piece, start_pos, new_pos, castling, piece_to_remove)
@@ -99,13 +106,19 @@ class Match():
                 if piece.type_code == 'P' and new_pos[0] % 7 == 0:
                     piece = self.promote_pawn(piece, promote_to)
                     promotion = True
+                    move_notation += promote_to
 
                 if self.in_check(opponent):
                     # print('Putting other player in check')
                     if self.its_checkmate(opponent):
                         checkmate = True
+                        move_notation += '#'
+                    else:
+                        move_notation += '+'
 
-        return move_successful, remove_piece, checkmate, castling, promotion
+
+        return (move_successful, remove_piece, checkmate,
+                castling, promotion, move_notation)
 
     def promote_pawn(self, pawn, promote_to):
         """Removes the pawn from the board and replaces it with specified Piece."""

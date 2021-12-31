@@ -46,20 +46,9 @@
                     halign: 'left'
             ################ lower Black ###########################
             StackLayout:
+                id: black_stack
                 orientation: 'lr-tb'
                 spacing: dp(5)
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/w_P.png'
-                    size_hint: .05, 1
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/w_P.png'
-                    size_hint: .05, 1
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/w_P.png'
-                    size_hint: .05, 1
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/w_P.png'
-                    size_hint: .05, 1
 
 ####### Container White Player #####################################
 
@@ -67,7 +56,7 @@
         orientation: 'horizontal'
         canvas.before:
             Color:
-                rgba: 1, 1, 1, .08
+                rgba: 1, 1, 1, .3
             Rectangle:
                 size: self.size
                 pos: self.pos
@@ -101,17 +90,6 @@
                     halign: 'left'
             ################ lower White ###########################
             StackLayout:
+                id: white_stack
                 orientation: 'lr-tb'
                 spacing: dp(5)
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/b_P.png'
-                    size_hint: .05, 1
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/b_P.png'
-                    size_hint: .05, 1
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/b_P.png'
-                    size_hint: .05, 1
-                Image:
-                    source: root.parent.parent.parent.graphics_path + '/chessboard_and_pieces/b_P.png'
-                    size_hint: .05, 1

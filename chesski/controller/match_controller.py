@@ -6,6 +6,7 @@ class MatchController:
         self.match = None
         self.main_layout = None
         self.game_over = True
+        self.move_count = 0
 
     def init_match(self):
         """
@@ -13,6 +14,7 @@ class MatchController:
         """
         self.game_over = False
         self.match = Match()
+        self.move_count = 0
 
     def get_piece_type_from_state(self, position):
         """
@@ -56,11 +58,12 @@ class MatchController:
 
         try:
             move_flags = self.match.make_a_move(move)
-            move_worked, piece_removal, checkmate, castling, promotion = move_flags
+            move_worked, piece_removal, checkmate, \
+            castling, promotion, move_in_notation = move_flags
             if move_worked:
                 if castling:
-                    self.main_layout.remove_piece(next_coordinates)
-                    self.main_layout.remove_piece(last_coordinates)
+                    self.main_layout.remove_piece(next_coordinates, to_stack=False)
+                    self.main_layout.remove_piece(last_coordinates, to_stack=False)
                     type_king = f'{current_player}_K'
                     type_rook = f'{current_player}_R'
                     row = last_coordinates[0]
@@ -76,7 +79,7 @@ class MatchController:
                 elif promotion:
                     if piece_removal:
                         self.main_layout.remove_piece(next_coordinates)
-                    self.main_layout.remove_piece(last_coordinates)
+                    self.main_layout.remove_piece(last_coordinates, to_stack=False)
                     type = self.get_piece_type_from_state(next_coordinates)
                     self.main_layout.add_piece(type, next_coordinates)
                 elif piece_removal:
@@ -86,6 +89,11 @@ class MatchController:
                 if checkmate:
                     self.main_layout.handle_checkmate(current_player)
                     self.game_over = True
+
+                self.move_count += 1
+                self.main_layout.update_move_text(move_in_notation,
+                                                  self.move_count,
+                                                  current_player)
 
             return move_worked
 
