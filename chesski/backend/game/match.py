@@ -85,7 +85,7 @@ class Match():
 
         return False
 
-    def make_a_move(self, move, as_notation=False, promote_to="Q"):
+    def make_a_move(self, move, as_notation=False):
         """
         Function handling the moves given as string in common chess notation
         or coordinate-tuple. Returning Move instance with all flags set
@@ -118,8 +118,7 @@ class Match():
 
             # setting move's promotion and deliver_check/checkmate flags
             if piece.type_code == 'P' and move.end_pos[0] % 7 == 0:
-                piece = self.promote_pawn(piece, promote_to)
-                move.promotion = promote_to
+                piece = self.promote_pawn(piece, move.promotion)
             if self.in_check(self.current_player):
                 move.delivering_check = True
                 if self.its_checkmate(self.current_player):
@@ -147,18 +146,24 @@ class Match():
                 white_insufficient = True
                 black_insufficient = True
 
-                for piece in self.pieces['w']:
-                    if piece.type_code in ['Q', 'P', 'R']:
+                for own_piece in self.pieces['w']:
+                    if own_piece.type_code in ['Q', 'P', 'R']:
                         white_insufficient = False
                         break
                 if white_insufficient:
-                    for piece in self.pieces['b']:
-                        if piece.type_code in ['Q', 'P', 'R']:
+                    for opponent_piece in self.pieces['b']:
+                        if opponent_piece.type_code in ['Q', 'P', 'R']:
                             black_insufficient = False
                             break
 
                 if white_insufficient and black_insufficient:
                     move.delivering_draw = True
+
+            # check for stalemate
+            opponent = self.get_opponent(piece.color)
+            if len(self.get_move_possibilities(opponent, check_stalemate=True)) == 0:
+                move.delivering_draw = True
+
 
             # self.chessboard.display_board()
             return True
@@ -295,14 +300,54 @@ class Match():
 
         return True
 
-    def _move_pieces_back(self, piece, start_pos, new_pos, castling, removed_piece):
-        """Reverting moving 'piece' from 'start_pos' to 'new_pos' (or castling)
-        and placing eventuelly removed piece back to original position."""
-        piece.move(start_pos)
-        if removed_piece:
-            removed_piece.move(new_pos)
-            if not castling:
-                self._add_to_piece_list(removed_piece)
+    def get_move_possibilities(self, player, check_stalemate=False):
+
+        move_possibilites = []
+        fields = []
+
+        for row in range(8):
+            for col in range(8):
+                fields.append((row, col))
+
+        for piece in self.pieces[player]:
+            for field in fields:
+                temp_move = Move(piece.position, field)
+                legal_move = True
+
+                if piece.move_is_pseudo_legal(temp_move):
+
+                    # make the move
+                    if temp_move.castling:
+                        self._castle(temp_move, piece)
+                    else:
+                        if temp_move.taking_piece:
+                            self._remove_from_piece_list(temp_move.taking_piece)
+                        piece.move(temp_move)
+
+                    #  if putting self in check
+                    if self.in_check(player):
+                        legal_move = False
+
+                    # revert move
+                    piece.move(temp_move, reverse=True)
+                    if temp_move.taking_piece:
+                        temp_move.taking_piece.move(temp_move)
+                        if not temp_move.castling:
+                            self._add_to_piece_list(temp_move.taking_piece)
+
+                    if legal_move:
+                        if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
+                            for promotion_option in ['Q', 'R', 'N', 'B']:
+                                temp_move.promotion = promotion_option
+                                move_possibilites.append(temp_move)
+                        else:
+                            move_possibilites.append(temp_move)
+
+                        if check_stalemate: # to know if at least one move possible
+                            return move_possibilites
+
+        return move_possibilites
+
 
     @staticmethod
     def get_opponent(player):

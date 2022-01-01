@@ -16,6 +16,14 @@
             size_hint: .8, 1
             font_size: max(dp(15), self.height - dp(15))
             font_name: root.graphics_path + font_title
+        ToggleButton:
+            size_hint: .15, 1
+            text: 'White'
+            on_state: root.on_toggle_white_engine(self)
+        ToggleButton:
+            size_hint: .15, 1
+            text: 'Black'
+            on_state: root.on_toggle_black_engine(self)
         Button:
             text: root.start_reset_button_text
             size_hint: .15, 1

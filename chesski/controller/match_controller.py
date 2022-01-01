@@ -3,6 +3,8 @@ from chesski.backend.game.move import Move
 
 from chesski.backend.game.helper_functions import translate_to_notation
 
+from chesski.backend.engines.random_engine import RandomEngine
+
 class MatchController:
 
     def __init__(self):
@@ -10,6 +12,7 @@ class MatchController:
         self.main_layout = None
         self.game_over = True
         self.move_count = 0
+        self.engine = RandomEngine()
 
     def init_match(self):
         """
@@ -49,7 +52,7 @@ class MatchController:
             score_black += piece.value
         return score_white - score_black
 
-    def move_was_possible(self, last_coordinates, next_coordinates, promote_choice='Q'):
+    def move_was_possible(self, last_coordinates, next_coordinates, promote_choice=None):
         """
         Makes a move on the backend board and informs the main_layout
         regarding necessary changes on the ui-board.
@@ -59,44 +62,13 @@ class MatchController:
         move = Move(last_coordinates, next_coordinates)
         current_player = self.get_current_player()
 
+        if promote_choice:
+            move = Move(last_coordinates, next_coordinates, promote_choice)
+        current_player = self.get_current_player()
+
         try:
-            if self.match.make_a_move(move, promote_to=promote_choice):
-                if move.castling:
-                    self.main_layout.remove_piece(next_coordinates, to_stack=False)
-                    self.main_layout.remove_piece(last_coordinates, to_stack=False)
-                    type_king = f'{current_player}_K'
-                    type_rook = f'{current_player}_R'
-                    row = last_coordinates[0]
-                    if move.castling == 'short':
-                        new_king_position = (row, 6)
-                        new_rook_position = (row, 5)
-                    elif move.castling == 'long':
-                        new_king_position = (row, 2)
-                        new_rook_position = (row, 3)
-                    self.main_layout.add_piece(type_rook, new_rook_position)
-                    self.main_layout.add_piece(type_king, new_king_position)
-                    # print("castled")
-                elif move.promotion:
-                    if move.taking_piece:
-                        self.main_layout.remove_piece(next_coordinates)
-                    self.main_layout.remove_piece(last_coordinates, to_stack=False)
-                    type = self.get_piece_type_from_state(next_coordinates)
-                    self.main_layout.add_piece(type, next_coordinates)
-                elif move.taking_piece:
-                    self.main_layout.remove_piece(next_coordinates)
-
-                if move.delivering_checkmate:
-                    self.main_layout.handle_checkmate(current_player)
-                    self.game_over = True
-                elif move.delivering_draw:
-                    self.main_layout.handle_draw(current_player)
-                    self.game_over = True
-
-                self.move_count += 1
-                move_in_notation = translate_to_notation(self.match, move)
-                self.main_layout.update_move_text(move_in_notation,
-                                                  self.move_count,
-                                                  current_player)
+            if self.match.make_a_move(move):
+                self.handle_move_ui_updates(move, current_player)
                 return True
             else:
                 return False
@@ -110,3 +82,52 @@ class MatchController:
 
     def ask_for_promotion(self, piece_widget, player, move):
         self.main_layout.popup_promotion(piece_widget, player, move)
+
+    def make_engine_move(self):
+        if self.game_over:
+            return
+        current_player = self.get_current_player()
+        move_possibilities = self.match.get_move_possibilities(current_player)
+        engine_move = self.engine.get_move(move_possibilities)
+        self.match.make_a_move(engine_move)
+        self.handle_move_ui_updates(engine_move, current_player, engine=True)
+
+    def handle_move_ui_updates(self, move, current_player, engine=False):
+        if move.castling:
+            rook_widget = self.main_layout.get_piece_widget(move.end_pos)
+            king_widget = self.main_layout.get_piece_widget(move.start_pos)
+            row = move.start_pos[0]
+            if move.castling == 'short':
+                new_king_position = (row, 6)
+                new_rook_position = (row, 5)
+            elif move.castling == 'long':
+                new_king_position = (row, 2)
+                new_rook_position = (row, 3)
+            rook_widget.move_to_coordinates(new_rook_position)
+            king_widget.move_to_coordinates(new_king_position)
+            # print("castled")
+        elif move.promotion:
+            if move.taking_piece:
+                self.main_layout.remove_piece(move.end_pos)
+            self.main_layout.remove_piece(move.start_pos, to_stack=False)
+            type = self.get_piece_type_from_state(move.end_pos)
+            self.main_layout.add_piece(type, move.end_pos)
+        elif move.taking_piece:
+            self.main_layout.remove_piece(move.end_pos)
+
+        if move.delivering_checkmate:
+            self.main_layout.handle_checkmate(current_player)
+            self.game_over = True
+        elif move.delivering_draw:
+            self.main_layout.handle_draw(current_player)
+            self.game_over = True
+
+        if not move.castling and not move.promotion:
+            piece_widget = self.main_layout.get_piece_widget(move.start_pos)
+            piece_widget.move_to_coordinates(move.end_pos)
+
+        self.move_count += 1
+        move_in_notation = translate_to_notation(self.match, move)
+        self.main_layout.update_move_text(move_in_notation,
+                                          self.move_count,
+                                          current_player)

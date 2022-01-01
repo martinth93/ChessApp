@@ -103,11 +103,7 @@ class ChessPiece(DragBehavior, Image):
                         self.match_controller.ask_for_promotion(self,
                                                                 self.type[0],
                                                                 move)
-                    elif (self.match_controller.move_was_possible(*move)):
-                            self.move_to_coordinates(next_coordinates)
-                            # print('move made!', next_coordinates)
-
-                    else: # move back
+                    elif not self.match_controller.move_was_possible(*move):
                         self.move_to_coordinates(self.last_coordinates)
                         # print('could not make move')
 
@@ -120,11 +116,9 @@ class ChessPiece(DragBehavior, Image):
     def make_promotion_move(self, move, promotion_choice):
         if (self.match_controller.move_was_possible(*move, promotion_choice)):
             self.move_to_coordinates(move[1])
-            # print('move made!', next_coordinates)
 
         else: # move back
             self.move_to_coordinates(self.last_coordinates)
-            # print('could not make move')
 
     def move_to_coordinates(self, coordinates):
         """

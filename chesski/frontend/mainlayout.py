@@ -1,5 +1,5 @@
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, BooleanProperty
+from kivy.properties import StringProperty, BooleanProperty, Clock
 from kivy.uix.image import Image
 from kivy.uix.button import Button
 
@@ -27,6 +27,28 @@ class MainLayout(BoxLayout):
         self.move_after_promote = None
         self.popup = self.ids.promotion_popup
 
+    def black_engine_update(self, dt):
+        if not self.match_controller.game_over:
+            if self.match_controller.get_current_player() == 'b':
+                self.match_controller.make_engine_move()
+
+    def white_engine_update(self, dt):
+        if not self.match_controller.game_over:
+            if self.match_controller.get_current_player() == 'w':
+                self.match_controller.make_engine_move()
+
+    def on_toggle_white_engine(self, widget):
+        if widget.state != 'normal':
+            Clock.schedule_interval(self.white_engine_update, 1/2.0)
+        else:
+            Clock.unschedule(self.white_engine_update)
+
+    def on_toggle_black_engine(self, widget):
+        if widget.state != 'normal':
+            Clock.schedule_interval(self.black_engine_update, 1/2.0)
+        else:
+            Clock.unschedule(self.black_engine_update)
+
     def start_game(self):
         """
         Button Function to start or reset the game.
@@ -50,12 +72,19 @@ class MainLayout(BoxLayout):
 
     def display_pieces_from_state(self):
         """displays the current state of the backend match"""
+        self.remove_all_piece_widgets()
         for row in range(8):
             for col in range(8):
                 coordinates = (row, col)
                 type = self.match_controller.get_piece_type_from_state(coordinates)
                 if type != None:
                     self.add_piece(type, coordinates)
+
+    def get_piece_widget(self, coordinates):
+        for piece in self.piece_widgets:
+            if piece.last_coordinates == coordinates:
+                return piece
+        return None
 
     def add_piece(self, type, coordinates):
         """
@@ -78,6 +107,7 @@ class MainLayout(BoxLayout):
         """
         Removes a piece on a given coordiante.
         """
+
         # print('removing piece')
         for i in range(len(self.piece_widgets)):
             # print('checking piece ', i)
