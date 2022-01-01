@@ -6,6 +6,7 @@ from chesski.frontend.chesspiece import ChessPiece
 from chesski.frontend.mainlayout import MainLayout
 from chesski.frontend.boardgrid import BoardGrid
 from chesski.frontend.gamelayout import GameLayout
+from chesski.frontend.buttons import IconButton
 
 # setting default window size of application
 from kivy.config import Config

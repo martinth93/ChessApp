@@ -18,7 +18,7 @@
             font_name: root.graphics_path + font_title
         Button:
             text: root.start_reset_button_text
-            size_hint: .1, 1
+            size_hint: .15, 1
             font_size: max(dp(15), self.height - dp(20))
             font_name: root.graphics_path + font_path
             on_press: root.start_game()
@@ -37,7 +37,8 @@
                 id: game_box
                 graphics_path: root.graphics_path
                 Image:
-                    source:root.graphics_path + '/chessboard_and_pieces/chessboard.png'
+                    id: board_image
+                    source: root.graphics_path + '/chessboard_and_pieces/chessboard_w.png'
                 BoardGrid:
                     id: board_grid
                 # Here is where Chess Pieces are instantiated
@@ -61,6 +62,20 @@
                 font_size: max(dp(10), self.height/13 - dp(20))
                 text_size: (self.width-dp(20), self.height-dp(20))
                 valign: 'top'
+
+                Button:
+                    #text: 'Rotate'
+                    background_color: 1, 1, 1, 0.0
+                    on_press: root.on_rotate_board_buttonpress()
+                    pos: self.parent.right - dp(55), self.parent.y + dp(5)
+                    size_hint: None, None
+                    size: dp(50), dp(50)
+                    width: self.height
+                    canvas.before:
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                            source: root.graphics_path + '/icons/rotate-camera.png'
 
             PlayerDisplay:
                 id: player_display

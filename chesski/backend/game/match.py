@@ -60,7 +60,8 @@ class Match():
         if piece.move_is_pseudo_legal(move):
             # make the move
             if move.castling:
-                self._castle(move, piece)
+                if self._castle(move, piece) == False:
+                    checking_yourself = True
             else:
                 if move.taking_piece:
                     self._remove_from_piece_list(move.taking_piece)
@@ -252,18 +253,32 @@ class Match():
 
     def _castle(self, move, king):
         """Make move castle long or castle short."""
+
+        if self.in_check(king.color):
+            return False # castling starting in check
+
         rook = move.taking_piece
         new_king_position = None
         new_rook_position = None
         row = king.position[0]
+        move_direction = 0
         if move.castling == 'short':
             new_king_position = (row, 6)
             new_rook_position = (row, 5)
+            move_direction = 1
         else: # long
             new_king_position = (row, 2)
             new_rook_position = (row, 3)
+            move_direction = -1
+
+        king.move(Move(king.position, (row, king.position[1] + move_direction)))
+        if self.in_check(king.color):
+            return False # castling through check
+
         king.move(Move(king.position, new_king_position))
         rook.move(Move(rook.position, new_rook_position))
+
+        return True
 
     def _move_pieces_back(self, piece, start_pos, new_pos, castling, removed_piece):
         """Reverting moving 'piece' from 'start_pos' to 'new_pos' (or castling)

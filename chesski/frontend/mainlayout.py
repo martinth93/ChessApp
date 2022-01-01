@@ -24,36 +24,41 @@ class MainLayout(BoxLayout):
         """
         Button Function to start or reset the game.
         """
-        # remove all remaining gui-pieces
-        if self.piece_widgets:
-            self.ids.game_box.clear_widgets(self.piece_widgets)
-            self.piece_widgets = []
+        self.remove_all_piece_widgets()
 
         # notify the match controller to start backend-match
         self.match_controller.init_match()
-
-        # setup pieces
-        for row in range(8):
-            for col in range(8):
-                position = (row, col)
-                type = self.match_controller.get_piece_type_from_state(position)
-                if type != None:
-                    self.add_piece(type, position)
+        self.display_pieces_from_state()
 
         # change start/reset button text
         self.start_reset_button_text = 'Reset'
         self.move_notations_text = ''
         self.clear_stacks()
 
-    def add_piece(self, type, position):
+    def remove_all_piece_widgets(self):
+        """remove all remaining gui-pieces"""
+        if self.piece_widgets:
+            self.ids.game_box.clear_widgets(self.piece_widgets)
+            self.piece_widgets = []
+
+    def display_pieces_from_state(self):
+        """displays the current state of the backend match"""
+        for row in range(8):
+            for col in range(8):
+                coordinates = (row, col)
+                type = self.match_controller.get_piece_type_from_state(coordinates)
+                if type != None:
+                    self.add_piece(type, coordinates)
+
+    def add_piece(self, type, coordinates):
         """
         Instantiates the Chesspiece UI-Element and add id as
         child-widget of the game-box.
         """
         gui_piece = ChessPiece(
-            board=self.ids.board_grid,
+            board_grid=self.ids.board_grid,
             type=type,
-            coordinates=position,
+            coordinates=coordinates,
             graphics_path=self.graphics_path,
             match_controller=self.match_controller
             )
@@ -111,3 +116,11 @@ class MainLayout(BoxLayout):
     def clear_stacks(self):
         self.white_stack.clear_widgets()
         self.black_stack.clear_widgets()
+
+    def on_rotate_board_buttonpress(self):
+        if not self.match_controller.game_over:
+            perspective = self.ids.board_grid.rotate_boardgrid()
+            self.ids.board_image.source = self.graphics_path + \
+                        f'/chessboard_and_pieces/chessboard_{perspective}.png'
+            self.remove_all_piece_widgets()
+            self.display_pieces_from_state()
