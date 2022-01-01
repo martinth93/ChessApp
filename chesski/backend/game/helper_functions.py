@@ -80,6 +80,9 @@ def translate_to_notation(match, move):
     if type_code != 'P' and not move.promotion:
         notation += type_code
 
+    if move.promotion:
+        notation += letters[move.start_pos[1]]
+
     # revert move and check if other piece could have moved there
     piece.move(move, reverse=True)
     if move.taking_piece:
