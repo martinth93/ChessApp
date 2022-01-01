@@ -98,7 +98,7 @@ def translate_to_notation(match, move):
     notation += str(move.end_pos[0]+1)
 
     if move.promotion:
-        notation += 'Q'
+        notation += move.promotion
 
     if move.delivering_checkmate:
         notation += '#'
@@ -147,5 +147,5 @@ def display_board(match):
         full_board.append(displayed_row)
     full_board.reverse()
 
-    print(np.array(full_board))
+    # print(np.array(full_board))
     return np.array(full_board)

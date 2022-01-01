@@ -23,59 +23,94 @@
             font_name: root.graphics_path + font_path
             on_press: root.start_game()
             background_color: .3, .5, .75
-    BoxLayout:
-        id: main_container
-        orientation: 'horizontal'
-        RelativeLayout:
-            id: game_container
-            canvas:
-                Color:
-                    rgba: 1, 1, 1, .05
-                Rectangle:
-                    size: self.size
-            GameLayout:
-                id: game_box
-                graphics_path: root.graphics_path
-                Image:
-                    id: board_image
-                    source: root.graphics_path + '/chessboard_and_pieces/chessboard_w.png'
-                BoardGrid:
-                    id: board_grid
-                # Here is where Chess Pieces are instantiated
+    RelativeLayout:
         BoxLayout:
-            padding: dp(20)
-            orientation: 'vertical'
-            Label:  # move notation display
-                canvas.before:
+            id: main_container
+            orientation: 'horizontal'
+            RelativeLayout:
+                id: game_container
+                canvas:
                     Color:
-                        rgba: 1, 1, 1, .2
+                        rgba: 1, 1, 1, .05
                     Rectangle:
                         size: self.size
-                        pos: self.pos
-                    Color:
-                        rgba: 0, 0, 0, 1
-                    Line:
-                        width: 2
-                        rectangle: self.x, self.y, self.width, self.height
-                markup: True
-                text: root.move_notations_text
-                font_size: max(dp(10), self.height/13 - dp(20))
-                text_size: (self.width-dp(20), self.height-dp(20))
-                valign: 'top'
+                GameLayout:
+                    id: game_box
+                    graphics_path: root.graphics_path
+                    Image:
+                        id: board_image
+                        source: root.graphics_path + '/chessboard_and_pieces/chessboard_w.png'
+                    BoardGrid:
+                        id: board_grid
+                    # Here is where Chess Pieces are instantiated
 
-                Button:
-                    #text: 'Rotate'
-                    background_color: 1, 1, 1, 0.0
-                    on_press: root.on_rotate_board_buttonpress()
-                    pos: self.parent.right - dp(55), self.parent.y + dp(5)
-                    size_hint: None, None
-                    size: dp(50), dp(50)
-                    width: self.height
+            BoxLayout:
+                padding: dp(20)
+                orientation: 'vertical'
+                Label:  # move notation display
                     canvas.before:
+                        Color:
+                            rgba: 1, 1, 1, .2
                         Rectangle:
-                            pos: self.pos
                             size: self.size
-                            source: root.graphics_path + '/icons/rotate-camera.png'
+                            pos: self.pos
+                        Color:
+                            rgba: 0, 0, 0, 1
+                        Line:
+                            width: 2
+                            rectangle: self.x, self.y, self.width, self.height
+                    markup: True
+                    text: root.move_notations_text
+                    font_size: max(dp(10), self.height/13 - dp(20))
+                    text_size: (self.width-dp(20), self.height-dp(20))
+                    valign: 'top'
 
-            PlayerDisplay:
-                id: player_display
+                    Button:
+                        #text: 'Rotate'
+                        background_color: 1, 1, 1, 0.0
+                        on_press: root.on_rotate_board_buttonpress()
+                        pos: self.parent.right - dp(55), self.parent.y + dp(5)
+                        size_hint: None, None
+                        size: dp(50), dp(50)
+                        width: self.height
+                        canvas.before:
+                            Rectangle:
+                                pos: self.pos
+                                size: self.size
+                                source: root.graphics_path + '/icons/rotate-camera.png'
+
+                PlayerDisplay:
+                    id: player_display
+
+        # Popups
+        BoxLayout:
+            id: promotion_popup
+            disabled: True
+            opacity: 0
+            padding: dp(5)
+            spacing: dp(5)
+            canvas:
+                Color:
+                    rgba: 1, 1, 1, .6
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+                Color:
+                    rgba: 0, 0, 0, 1
+                Line:
+                    width: 2
+                    rectangle: self.x, self.y, self.width, self.height
+            size_hint: None, .15
+            width: self.height * 4
+            # size: dp(160), dp(40)
+            center_x: self.parent.center_x
+            center_y: self.parent.center_y
+
+            IconButton:
+                on_press: root.on_promotion_choice('Q')
+            IconButton:
+                on_press: root.on_promotion_choice('B')
+            IconButton:
+                on_press: root.on_promotion_choice('N')
+            IconButton:
+                on_press: root.on_promotion_choice('R')

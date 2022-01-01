@@ -45,7 +45,7 @@ class BoardGrid(GridLayout):
     def rotate_boardgrid(self):
         if self.board_orientation == 'w':
             self.board_orientation = 'b'
-            print('rotate')
+            # print('rotate')
         else:
             self.board_orientation = 'w'
         return self.board_orientation

@@ -1,8 +1,12 @@
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, BooleanProperty
 from kivy.uix.image import Image
+from kivy.uix.button import Button
+
+import time
 
 from chesski.frontend.chesspiece import ChessPiece
+from chesski.frontend.buttons import IconButton
 
 class MainLayout(BoxLayout):
     start_reset_button_text = StringProperty("Start")
@@ -19,6 +23,9 @@ class MainLayout(BoxLayout):
         self.match_controller.main_layout = self
         self.black_stack = self.ids.player_display.ids.black_stack
         self.white_stack = self.ids.player_display.ids.white_stack
+        self.piece_to_promote = None
+        self.move_after_promote = None
+        self.popup = self.ids.promotion_popup
 
     def start_game(self):
         """
@@ -78,7 +85,7 @@ class MainLayout(BoxLayout):
             if piece.last_coordinates == coordinates:
                 piece_to_remove = self.piece_widgets.pop(i)
                 self.ids.game_box.remove_widget(piece_to_remove)
-                print('piece removed')
+                # print('piece removed')
                 self.update_material_text()
                 if to_stack:
                     image_path = piece_to_remove.source
@@ -124,3 +131,22 @@ class MainLayout(BoxLayout):
                         f'/chessboard_and_pieces/chessboard_{perspective}.png'
             self.remove_all_piece_widgets()
             self.display_pieces_from_state()
+
+    def popup_promotion(self, piece_widget, player, move):
+        """Shows the Promotion options, fills it with colored piece images and
+        stores information (which piece to promote and what move to make)
+        that is needed when choice was made (IconButton clicked)"""
+        for widget, choice in zip(self.popup.children, ['R', 'N', 'B', 'Q']):
+            widget.source = self.graphics_path + f'/chessboard_and_pieces/{player}_{choice}.png'
+        self.popup.pos = piece_widget.pos
+        self.popup.opacity = 1
+        self.popup.disabled = False
+        self.piece_to_promote = piece_widget
+        self.move_after_promote = move
+
+    def on_promotion_choice(self, choice):
+        """when promotion-iconbutton clicked, inform piece widget, which will
+        inform the match-controller to make the correct move (if legal)"""
+        self.piece_to_promote.make_promotion_move(self.move_after_promote, choice)
+        self.popup.opacity = 0
+        self.popup.disabled = True

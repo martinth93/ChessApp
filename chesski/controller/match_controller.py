@@ -49,7 +49,7 @@ class MatchController:
             score_black += piece.value
         return score_white - score_black
 
-    def move_was_possible(self, last_coordinates, next_coordinates):
+    def move_was_possible(self, last_coordinates, next_coordinates, promote_choice='Q'):
         """
         Makes a move on the backend board and informs the main_layout
         regarding necessary changes on the ui-board.
@@ -60,8 +60,7 @@ class MatchController:
         current_player = self.get_current_player()
 
         try:
-            if self.match.make_a_move(move):
-                print('1')
+            if self.match.make_a_move(move, promote_to=promote_choice):
                 if move.castling:
                     self.main_layout.remove_piece(next_coordinates, to_stack=False)
                     self.main_layout.remove_piece(last_coordinates, to_stack=False)
@@ -76,7 +75,7 @@ class MatchController:
                         new_rook_position = (row, 3)
                     self.main_layout.add_piece(type_rook, new_rook_position)
                     self.main_layout.add_piece(type_king, new_king_position)
-                    print("castled")
+                    # print("castled")
                 elif move.promotion:
                     if move.taking_piece:
                         self.main_layout.remove_piece(next_coordinates)
@@ -105,3 +104,6 @@ class MatchController:
 
     def get_current_player(self):
         return self.match.current_player
+
+    def ask_for_promotion(self, piece_widget, player, move):
+        self.main_layout.popup_promotion(piece_widget, player, move)

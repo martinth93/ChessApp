@@ -114,7 +114,7 @@ class Match():
             # setting move's promotion and deliver_check/checkmate flags
             if piece.type_code == 'P' and move.end_pos[0] % 7 == 0:
                 piece = self.promote_pawn(piece, promote_to)
-                move.promotion = True
+                move.promotion = promote_to
             if self.in_check(self.current_player):
                 move.delivering_check = True
                 if self.its_checkmate(self.current_player):
@@ -225,31 +225,6 @@ class Match():
         color = piece.color
         self.pieces[color].remove(piece)
         self.removed_pieces[color].append(piece)
-
-    def _preprocess_move(self, piece, new_pos):
-        """Making the"""
-        start_pos = piece.position
-        castling = ""
-        remove_piece = False
-        piece_to_remove = self.chessboard.return_piece_on_field(new_pos)
-
-        if piece_to_remove != None:
-            if piece_to_remove.color == piece.color:
-                castling = piece.check_for_castle(new_pos)
-            else:
-                remove_piece = True
-
-        return start_pos, castling, piece_to_remove, remove_piece
-
-    def _move_pieces(self, piece, start_pos, new_pos, castling, piece_to_remove):
-        """Moving 'piece' from 'start_pos' to 'new_pos' (or castling)
-        and removing piece if it ways taken."""
-        if castling:
-            self._castle(castling, piece, piece_to_remove)
-        else:
-            if piece_to_remove:
-                self._remove_from_piece_list(piece_to_remove)
-            piece.move(new_pos)
 
     def _castle(self, move, king):
         """Make move castle long or castle short."""

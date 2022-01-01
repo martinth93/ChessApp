@@ -14,6 +14,7 @@ class ChessPiece(DragBehavior, Image):
 
         self.drag_rectangle = (self.board_grid.x, self.board_grid.y,
                                self.board_grid.width, self.board_grid.height)
+        self.type = type
 
         self.source = graphics_path + f'/chessboard_and_pieces/{type}.png'
 
@@ -93,22 +94,37 @@ class ChessPiece(DragBehavior, Image):
         if not self.match_controller.game_over:
             if self.getting_dragged: # only for clicked piece
                 next_coordinates = self.get_nearest_coordinates()
-                move = (self.last_coordinates, next_coordinates)
-
-                if (next_coordinates != None and
-                    self.match_controller.move_was_possible(*move)):
-                    self.move_to_coordinates(next_coordinates)
-                    print('move made!', next_coordinates)
-
-                else: # move back
+                if next_coordinates == None:
                     self.move_to_coordinates(self.last_coordinates)
-                    # print('could not make move')
+                else:
+                    move = (self.last_coordinates, next_coordinates)
+                    if (self.type == 'w_P' and next_coordinates[0] == 7 or
+                        self.type == 'b_P' and next_coordinates[0] == 0):
+                        self.match_controller.ask_for_promotion(self,
+                                                                self.type[0],
+                                                                move)
+                    elif (self.match_controller.move_was_possible(*move)):
+                            self.move_to_coordinates(next_coordinates)
+                            # print('move made!', next_coordinates)
+
+                    else: # move back
+                        self.move_to_coordinates(self.last_coordinates)
+                        # print('could not make move')
 
                 # stop function schedule to keep piece on board
                 Clock.unschedule(self.update_while_dragging)
 
                 self.getting_dragged = False
         super(ChessPiece,self).on_touch_up(touch)
+
+    def make_promotion_move(self, move, promotion_choice):
+        if (self.match_controller.move_was_possible(*move, promotion_choice)):
+            self.move_to_coordinates(move[1])
+            # print('move made!', next_coordinates)
+
+        else: # move back
+            self.move_to_coordinates(self.last_coordinates)
+            # print('could not make move')
 
     def move_to_coordinates(self, coordinates):
         """
