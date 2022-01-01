@@ -103,8 +103,7 @@
             size_hint: None, .15
             width: self.height * 4
             # size: dp(160), dp(40)
-            center_x: self.parent.center_x
-            center_y: self.parent.center_y
+            center_x: 3*root.width
 
             IconButton:
                 on_press: root.on_promotion_choice('Q')
