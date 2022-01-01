@@ -150,3 +150,4 @@ class MainLayout(BoxLayout):
         self.piece_to_promote.make_promotion_move(self.move_after_promote, choice)
         self.popup.opacity = 0
         self.popup.disabled = True
+        self.popup.x = 3*self.width
