@@ -127,7 +127,7 @@ class Pawn(Piece):
                   abs(direction[1]) == 1):
                 inter_pos = (move.start_pos[0]+2*one_field, move.start_pos[1])
                 if self.chessboard.no_pieces_between(move.start_pos, inter_pos):
-                    if move.taking_piece:
+                    if move.taking_piece and move.taking_piece.type_code == 'P':
                         return True
 
         # no legal move found
