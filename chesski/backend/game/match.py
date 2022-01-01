@@ -3,7 +3,7 @@ from chesski.backend.game.pieces import Pawn, Rook, Knight, Bishop, Queen, King
 from chesski.backend.game.move import Move
 
 from chesski.backend.game.helper_functions import (translate_from_notation,
-                                        display_board, translate_to_notation)
+                                                   translate_to_notation)
 
 class Match():
     """A class setting up Board and Pieces and Managing Moves."""
@@ -13,6 +13,8 @@ class Match():
         self.current_player = current_player
         self.pieces = {'w': [], 'b': []}
         self.removed_pieces = {'w': [], 'b': []}
+        self.occured_positions = [] # list of (chessboard_state, repetitions)
+        self.moves_without_capture = 0
 
         if chessboard is None:
             self.chessboard = ChessBoard()
@@ -104,7 +106,10 @@ class Match():
                 self._castle(move, piece)
             else:
                 if move.taking_piece:
+                    self.moves_without_capture = 0
                     self._remove_from_piece_list(move.taking_piece)
+                else:
+                    self.moves_without_capture += 1
                 piece.move(move)
 
             piece.moved_once = True
@@ -120,7 +125,42 @@ class Match():
                 if self.its_checkmate(self.current_player):
                     move.delivering_checkmate = True
 
-            display_board(self)
+            # check for repetition draw
+            current_state = self.chessboard.display_board()
+            new_position = True
+            for i in range(len(self.occured_positions)):
+                if (current_state == self.occured_positions[i][0]).all():
+                    new_position = False
+                    self.occured_positions[i][1] += 1
+                    print('FOUND REPEAT', self.occured_positions[i][1])
+                    if self.occured_positions[i][1] == 3:
+                         move.delivering_draw = True
+            if new_position:
+                self.occured_positions.append([current_state, 1])
+
+            # check for 50-moves no capture draw (here 1 move = each player)
+            if self.moves_without_capture > 99:
+                move.delivering_draw = True
+
+            # check insufficient material draw
+            if len(self.pieces['w']) < 3 and len(self.pieces['b']) < 3:
+                white_insufficient = True
+                black_insufficient = True
+
+                for piece in self.pieces['w']:
+                    if piece.type_code in ['Q', 'P', 'R']:
+                        white_insufficient = False
+                        break
+                if white_insufficient:
+                    for piece in self.pieces['b']:
+                        if piece.type_code in ['Q', 'P', 'R']:
+                            black_insufficient = False
+                            break
+
+                if white_insufficient and black_insufficient:
+                    move.delivering_draw = True
+
+            # self.chessboard.display_board()
             return True
         return False
 

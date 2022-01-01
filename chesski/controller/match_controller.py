@@ -88,6 +88,9 @@ class MatchController:
                 if move.delivering_checkmate:
                     self.main_layout.handle_checkmate(current_player)
                     self.game_over = True
+                elif move.delivering_draw:
+                    self.main_layout.handle_draw(current_player)
+                    self.game_over = True
 
                 self.move_count += 1
                 move_in_notation = translate_to_notation(self.match, move)

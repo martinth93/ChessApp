@@ -101,7 +101,14 @@ class MainLayout(BoxLayout):
         for piece_widget in self.piece_widgets:
             piece_widget.disable_drag()
         print('##################################################\n' \
-              + f'Checkmate! {checkmating_player} won.\n' \
+              + f'   Checkmate! {checkmating_player} won.\n' \
+              + '##################################################')
+
+    def handle_draw(self, checkmating_player):
+        for piece_widget in self.piece_widgets:
+            piece_widget.disable_drag()
+        print('##################################################\n' \
+              + f'                   Draw!\n' \
               + '##################################################')
 
     def update_material_text(self):

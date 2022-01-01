@@ -6,6 +6,7 @@ class Move():
         # gets set in make_a_move
         self.delivering_check = False
         self.delivering_checkmate = False
+        self.delivering_draw = False
         self.promotion = ""
 
         # gets set in in check_for_castle
