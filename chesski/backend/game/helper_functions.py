@@ -80,6 +80,12 @@ def translate_to_notation(match, move):
     if type_code != 'P' and not move.promotion:
         notation += type_code
 
+    # revert move and check if other piece could have moved there
+    piece.move(move, reverse=True)
+    if move.taking_piece:
+        move.taking_piece.move(move)
+        match._add_to_piece_list(move.taking_piece)
+
     for other_piece in match.pieces[color]:
         if other_piece == piece:
             continue
@@ -88,6 +94,11 @@ def translate_to_notation(match, move):
             notation += letters[move.start_pos[1]]
             if other_piece.position[1] == piece.position[1]:
                 notation += str(move.start_pos[0] + 1)
+
+    # make move again
+    if move.taking_piece:
+        match._remove_from_piece_list(move.taking_piece)
+    piece.move(move)
 
     if move.taking_piece:
         if type_code == 'P' and len(notation)==0:
