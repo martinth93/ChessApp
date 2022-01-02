@@ -338,8 +338,8 @@ class Match():
                     if legal_move:
                         if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
                             for promotion_option in ['Q', 'R', 'N', 'B']:
-                                temp_move.promotion = promotion_option
-                                move_possibilites.append(temp_move)
+                                prom_move = Move(temp_move.start_pos, temp_move.end_pos, promotion_option)
+                                move_possibilites.append(prom_move)
                         else:
                             move_possibilites.append(temp_move)
 

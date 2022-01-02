@@ -1,5 +1,5 @@
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import StringProperty, BooleanProperty, Clock
+from kivy.properties import StringProperty, BooleanProperty, Clock, NumericProperty
 from kivy.uix.image import Image
 from kivy.uix.button import Button
 
@@ -14,6 +14,8 @@ class MainLayout(BoxLayout):
     white_material_text = StringProperty('')
     black_material_text = StringProperty('')
     move_notations_text = StringProperty('')
+    score_white = NumericProperty(0.0)
+    score_black = NumericProperty(0.0)
 
     piece_widgets = []
 
@@ -26,28 +28,57 @@ class MainLayout(BoxLayout):
         self.piece_to_promote = None
         self.move_after_promote = None
         self.popup = self.ids.promotion_popup
+        self.auto_restart = True
+        self.speed_engine = .06 # seconds between engine moves
+        self.black_engine = False
+        self.white_engine = False
 
-    def black_engine_update(self, dt):
-        if not self.match_controller.game_over:
-            if self.match_controller.get_current_player() == 'b':
-                self.match_controller.make_engine_move()
+    def schedule_engine_move(self):
+        if self.black_engine or self.white_engine:
+            Clock.schedule_once(self.update_engine_moves, self.speed_engine)
 
-    def white_engine_update(self, dt):
+    def update_engine_moves(self, dt):
+        if self.match_controller.get_current_player() == 'w':
+            if self.white_engine:
+                self.white_engine_move()
+                print('white move')
+        else:
+            if self.black_engine:
+                self.black_engine_move()
+                print('black move')
+
+    def white_engine_move(self):
         if not self.match_controller.game_over:
-            if self.match_controller.get_current_player() == 'w':
-                self.match_controller.make_engine_move()
+            self.match_controller.make_engine_move()
+            if self.black_engine:
+                Clock.schedule_once(self.update_engine_moves, self.speed_engine)
+
+    def black_engine_move(self):
+        if not self.match_controller.game_over:
+            self.match_controller.make_engine_move()
+            if self.white_engine:
+                Clock.schedule_once(self.update_engine_moves, self.speed_engine)
 
     def on_toggle_white_engine(self, widget):
-        if widget.state != 'normal':
-            Clock.schedule_interval(self.white_engine_update, 1/2.0)
+        if widget.state == 'normal':
+            self.white_engine = False
         else:
-            Clock.unschedule(self.white_engine_update)
+            self.white_engine = True
+            if (not self.match_controller.game_over and
+                self.match_controller.get_current_player() == 'w'):
+                Clock.schedule_once(self.update_engine_moves, .5)
+
+        print("white_engine", self.white_engine)
 
     def on_toggle_black_engine(self, widget):
-        if widget.state != 'normal':
-            Clock.schedule_interval(self.black_engine_update, 1/2.0)
+        if widget.state == 'normal':
+            self.black_engine = False
         else:
-            Clock.unschedule(self.black_engine_update)
+            self.black_engine = True
+            if (not self.match_controller.game_over and
+                self.match_controller.get_current_player() == 'b'):
+                Clock.schedule_once(self.update_engine_moves, .5)
+        print("black_engine", self.black_engine)
 
     def start_game(self):
         """
@@ -63,6 +94,8 @@ class MainLayout(BoxLayout):
         self.start_reset_button_text = 'Reset'
         self.move_notations_text = ''
         self.clear_stacks()
+        if self.white_engine:
+            Clock.schedule_once(self.update_engine_moves, self.speed_engine)
 
     def remove_all_piece_widgets(self):
         """remove all remaining gui-pieces"""
@@ -102,6 +135,8 @@ class MainLayout(BoxLayout):
         self.piece_widgets.append(gui_piece)
         self.update_material_text()
 
+        return gui_piece
+
 
     def remove_piece(self, coordinates, to_stack=True):
         """
@@ -128,18 +163,34 @@ class MainLayout(BoxLayout):
         raise ValueError('Piece to remove couldnt be found.')
 
     def handle_checkmate(self, checkmating_player):
+        Clock.unschedule(self.update_engine_moves)
+        self.match_controller.game_over = True
         for piece_widget in self.piece_widgets:
             piece_widget.disable_drag()
         print('##################################################\n' \
               + f'   Checkmate! {checkmating_player} won.\n' \
               + '##################################################')
+        if checkmating_player == 'w':
+            self.score_white += 1
+        else:
+            self.score_black += 1
+        time.sleep(1)
+        if self.auto_restart:
+            self.start_game()
 
     def handle_draw(self, checkmating_player):
+        Clock.unschedule(self.update_engine_moves)
+        self.match_controller.game_over = True
         for piece_widget in self.piece_widgets:
             piece_widget.disable_drag()
         print('##################################################\n' \
               + f'                   Draw!\n' \
               + '##################################################')
+        self.score_white += 0.5
+        self.score_black += 0.5
+        time.sleep(1)
+        if self.auto_restart:
+            self.start_game()
 
     def update_material_text(self):
         score = self.match_controller.get_material_difference()

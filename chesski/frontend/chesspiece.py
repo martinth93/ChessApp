@@ -18,8 +18,9 @@ class ChessPiece(DragBehavior, Image):
 
         self.source = graphics_path + f'/chessboard_and_pieces/{type}.png'
 
-        self.starting_coordinates = coordinates
         self.last_coordinates = coordinates
+        self.move_to_coordinates(self.last_coordinates)
+
         self.getting_dragged = False
 
         self.enable_drag()
@@ -39,7 +40,6 @@ class ChessPiece(DragBehavior, Image):
         """
         workaround for image appearing at 0,0 when first instantiated
         """
-        self.move_to_coordinates(self.starting_coordinates)
         self.opacity=1
 
     def on_size(self, *args):
@@ -116,7 +116,6 @@ class ChessPiece(DragBehavior, Image):
     def make_promotion_move(self, move, promotion_choice):
         if (self.match_controller.move_was_possible(*move, promotion_choice)):
             self.move_to_coordinates(move[1])
-
         else: # move back
             self.move_to_coordinates(self.last_coordinates)
 

@@ -33,10 +33,20 @@
                         pos: self.pos
 
                 Label:
+                    size_hint: .25, 1
+                    font_size: max(dp(10), self.height-dp(10))
+                    font_name: root.parent.parent.parent.parent.graphics_path + font_path
+                    text: str(root.parent.parent.parent.parent.score_black)
+                    background_color: 1, 1, 1, 0.2
+                    text_size: self.size
+                    halign: 'center'
+                    valign: 'middle'
+                Label:
                     text: ' Black Player'
                     font_size: max(dp(10), self.height-dp(8))
                     text_size: self.size
                     halign: 'left'
+                    valign: 'middle'
                     font_name: root.parent.parent.parent.parent.graphics_path + font_path
                 Label:
                     font_size: max(dp(10), self.height-dp(10))
@@ -79,10 +89,19 @@
                         size: self.size
                         pos: self.pos
                 Label:
+                    size_hint: .25, 1
+                    font_size: max(dp(10), self.height-dp(10))
+                    font_name: root.parent.parent.parent.parent.graphics_path + font_path
+                    text: str(root.parent.parent.parent.parent.score_white)
+                    text_size: self.size
+                    halign: 'center'
+                    valign: 'middle'
+                Label:
                     text: ' White Player'
                     font_size: max(dp(10), self.height-dp(8))
                     text_size: self.size
                     halign: 'left'
+                    valign: 'middle'
                     font_name: root.parent.parent.parent.parent.graphics_path + font_path
                 Label:
                     font_size: max(dp(10), self.height-dp(10))
@@ -91,6 +110,7 @@
                     text_size: self.size
                     halign: 'left'
                     valign: 'middle'
+
             ################ lower White ###########################
             StackLayout:
                 id: white_stack
