@@ -4,6 +4,7 @@ from chesski.backend.game.move import Move
 from chesski.backend.game.helper_functions import translate_to_notation
 
 from chesski.backend.engines.random_engine import RandomEngine
+from chesski.backend.engines.material_engine import MaterialEngine
 
 import time
 import traceback
@@ -15,7 +16,9 @@ class MatchController:
         self.main_layout = None
         self.game_over = True
         self.move_count = 0
-        self.engine = RandomEngine()
+        self.engine1 = MaterialEngine(checkmate_filter=True, check_value=0)
+        self.engine2 = RandomEngine()
+        self.engine1_color = 'w'
 
     def init_match(self):
         """
@@ -91,7 +94,13 @@ class MatchController:
         current_player = self.get_current_player()
         current_state = self.match.chessboard.state
         move_possibilities = self.match.get_move_possibilities(current_player)
-        engine_move = self.engine.get_move(current_state, move_possibilities)
+
+        engine_move = None
+        if current_player == self.engine1_color:
+            engine_move = self.engine1.get_move(current_state, move_possibilities)
+        else:
+            engine_move = self.engine2.get_move(current_state, move_possibilities)
+
         self.match.make_a_move(engine_move)
         self.handle_move_ui_updates(engine_move, current_player, engine=True)
 

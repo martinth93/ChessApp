@@ -131,7 +131,7 @@ class Match():
                 if (current_state == self.occured_positions[i][0]).all():
                     new_position = False
                     self.occured_positions[i][1] += 1
-                    print('FOUND REPEAT', self.occured_positions[i][1])
+                    # print('FOUND REPEAT', self.occured_positions[i][1])
                     if self.occured_positions[i][1] == 3:
                          move.delivering_draw = True
             if new_position:
@@ -239,10 +239,6 @@ class Match():
                             self._remove_from_piece_list(temp_move.taking_piece)
                         piece.move(temp_move)
 
-                    #  if putting self in check
-                    if self.in_check(winning_player):
-                        legal_move = False
-
                     # change flag if move gets loosing player out of check
                     if not self.in_check(losing_player):
                         still_in_check = False
@@ -254,7 +250,7 @@ class Match():
                         if not temp_move.castling:
                             self._add_to_piece_list(temp_move.taking_piece)
 
-                    if not still_in_check and legal_move:
+                    if not still_in_check:
                         return False
 
         # no way out of check
@@ -302,6 +298,7 @@ class Match():
 
     def get_move_possibilities(self, player, check_stalemate=False):
 
+        opponent = self.get_opponent(player)
         move_possibilites = []
         fields = []
 
@@ -313,6 +310,7 @@ class Match():
             for field in fields:
                 temp_move = Move(piece.position, field)
                 legal_move = True
+                promoted = False
 
                 if piece.move_is_pseudo_legal(temp_move):
 
@@ -328,6 +326,36 @@ class Match():
                     if self.in_check(player):
                         legal_move = False
 
+                    if legal_move:
+                        # setting move's promotion and deliver_check/checkmate flags
+                        if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
+                            for option in ['Q', 'R', 'N', 'B']:
+                                promotion_move = Move(temp_move.start_pos, temp_move.end_pos, promotion=option)
+                                promotion_move.taking_piece = temp_move.taking_piece
+
+                                new_piece = self.promote_pawn(piece, option)
+
+                                # setting check and checkmate flags
+                                if self.in_check(opponent):
+                                    promotion_move.delivering_check = True
+                                    if self.its_checkmate(opponent):
+                                        promotion_move.delivering_checkmate = True
+
+                                # revert promotion
+                                self.pieces[player].remove(new_piece)
+                                self.chessboard.place_on_board(piece)
+                                self.pieces[player].append(piece)
+
+                                move_possibilites.append(promotion_move)
+
+                                promoted = True
+
+                        else: # setting check and checkmate flags
+                            if self.in_check(opponent):
+                                temp_move.delivering_check = True
+                                if self.its_checkmate(opponent):
+                                    temp_move.delivering_checkmate = True
+
                     # revert move
                     piece.move(temp_move, reverse=True)
                     if temp_move.taking_piece:
@@ -336,11 +364,7 @@ class Match():
                             self._add_to_piece_list(temp_move.taking_piece)
 
                     if legal_move:
-                        if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
-                            for promotion_option in ['Q', 'R', 'N', 'B']:
-                                prom_move = Move(temp_move.start_pos, temp_move.end_pos, promotion_option)
-                                move_possibilites.append(prom_move)
-                        else:
+                        if not promoted:
                             move_possibilites.append(temp_move)
 
                         if check_stalemate: # to know if at least one move possible

@@ -28,8 +28,8 @@ class MainLayout(BoxLayout):
         self.piece_to_promote = None
         self.move_after_promote = None
         self.popup = self.ids.promotion_popup
-        self.auto_restart = True
-        self.speed_engine = .06 # seconds between engine moves
+        self.auto_restart = False
+        self.speed_engine = .1 # seconds between engine moves (smallest: .06)
         self.black_engine = False
         self.white_engine = False
 
@@ -174,7 +174,7 @@ class MainLayout(BoxLayout):
             self.score_white += 1
         else:
             self.score_black += 1
-        time.sleep(1)
+        # time.sleep(1)
         if self.auto_restart:
             self.start_game()
 
@@ -188,7 +188,7 @@ class MainLayout(BoxLayout):
               + '##################################################')
         self.score_white += 0.5
         self.score_black += 0.5
-        time.sleep(1)
+        # time.sleep(1)
         if self.auto_restart:
             self.start_game()
 
