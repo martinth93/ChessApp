@@ -4,8 +4,8 @@ from chesski.backend.engines.material_engine import MaterialEngine
 
 import time
 
-engine_1 = MaterialEngine(checkmate_filter=True, check_value=0)
-engine_2 = MaterialEngine(checkmate_filter=False, check_value=0)
+engine_1 = MaterialEngine(checkmate_filter=True, check_value=0.5)
+engine_2 = MaterialEngine(checkmate_filter=True, check_value=0)
 
 engine1_won = 0
 engine2_won = 0

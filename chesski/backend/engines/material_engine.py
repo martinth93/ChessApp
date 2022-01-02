@@ -22,7 +22,7 @@ class MaterialEngine():
 
             # calculate value
             if move.delivering_check:
-                value += self.check_value
+                value += self.check_value # bad idea
             if move.taking_piece:
                 value += move.taking_piece.value
 
