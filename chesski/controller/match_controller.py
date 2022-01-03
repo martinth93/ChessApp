@@ -16,7 +16,7 @@ class MatchController:
         self.main_layout = None
         self.game_over = True
         self.move_count = 0
-        self.engine1 = MaterialEngine(checkmate_filter=True, check_value=0)
+        self.engine1 = MaterialEngine(checkmate_filter=True, avoiding_draw=False)
         self.engine2 = RandomEngine()
         self.engine1_color = 'w'
 
@@ -92,14 +92,12 @@ class MatchController:
 
     def make_engine_move(self):
         current_player = self.get_current_player()
-        current_state = self.match.chessboard.state
-        move_possibilities = self.match.get_move_possibilities(current_player)
 
         engine_move = None
         if current_player == self.engine1_color:
-            engine_move = self.engine1.get_move(current_state, move_possibilities)
+            engine_move = self.engine1.get_move(self.match, current_player)
         else:
-            engine_move = self.engine2.get_move(current_state, move_possibilities)
+            engine_move = self.engine2.get_move(self.match, current_player)
 
         self.match.make_a_move(engine_move)
         self.handle_move_ui_updates(engine_move, current_player, engine=True)

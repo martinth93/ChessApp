@@ -9,7 +9,7 @@ class Move():
         self.delivering_draw = False
         self.promotion = promotion
 
-        # gets set in in check_for_castle
+        # gets set in in check_for_castle (piece level)
         self.castling = ""
 
         # gets set in in check_taking_piece

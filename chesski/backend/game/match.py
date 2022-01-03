@@ -51,12 +51,8 @@ class Match():
         reverting it after.
         - checking if putting yourself in check
         """
-
-        start_pos = move.start_pos
-        new_pos = move.end_pos
         piece = self.chessboard.return_piece_on_field(move.start_pos)
         player = piece.color
-        opponent = self.get_opponent(player)
         checking_yourself = False
 
         if piece.move_is_pseudo_legal(move):
@@ -70,7 +66,7 @@ class Match():
                 piece.move(move)
 
             #  if player now in check
-            if self.in_check(player):
+            if self._in_check(player):
                 checking_yourself = True
 
             # revert move
@@ -88,100 +84,131 @@ class Match():
     def make_a_move(self, move, as_notation=False):
         """
         Function handling the moves given as string in common chess notation
-        or coordinate-tuple. Returning Move instance with all flags set
-        to handle the different outcomes.
+        or as instance of the Move class. Returning True if move is legal and
+        setting checkmate, check and draw flag of given move instances.
         """
         # get coordinates of startfield and endfield
         if as_notation:
             move = translate_from_notation(move)
 
         piece = self.chessboard.return_piece_on_field(move.start_pos)
+        player = piece.color
 
         if piece.color != self.current_player:
             raise ValueError(f"Wrong player: {self.current_player} has to move!")
 
         if self.move_is_legal(move):
+
             # make move
-            if move.castling:
-                self._castle(move, piece)
-            else:
-                if move.taking_piece:
-                    self.moves_without_capture = 0
-                    self._remove_from_piece_list(move.taking_piece)
-                else:
-                    self.moves_without_capture += 1
-                piece.move(move)
+            self._pseudo_move(move, piece)
+
+            if move.taking_piece and not move.castling:
+                self.occured_positions = [] # privious positions cant be reached
 
             piece.moved_once = True
             self.change_turns()
 
-
-            # setting move's promotion and deliver_check/checkmate flags
+            # if promotion -> turns pawn into promotion piece
             if piece.type_code == 'P' and move.end_pos[0] % 7 == 0:
-                piece = self.promote_pawn(piece, move.promotion)
-            if self.in_check(self.current_player):
+                piece = self._promote_pawn(piece, move.promotion)
+
+            # set deliver_check/checkmate flags
+            if self._in_check(self.current_player):
                 move.delivering_check = True
-                if self.its_checkmate(self.current_player):
+                if self._its_checkmate(self.current_player):
                     move.delivering_checkmate = True
 
-            # check for repetition draw
-            current_state = self.chessboard.display_board()
-            new_position = True
-            for i in range(len(self.occured_positions)):
-                if (current_state == self.occured_positions[i][0]).all():
-                    new_position = False
-                    self.occured_positions[i][1] += 1
-                    # print('FOUND REPEAT', self.occured_positions[i][1])
-                    if self.occured_positions[i][1] == 3:
-                         move.delivering_draw = True
-            if new_position:
-                self.occured_positions.append([current_state, 1])
-
-            # check for 50-moves no capture draw (here 1 move = each player)
-            if self.moves_without_capture > 99:
-                move.delivering_draw = True
-
-            # check insufficient material draw
-            if len(self.pieces['w']) < 3 and len(self.pieces['b']) < 3:
-                white_insufficient = True
-                black_insufficient = True
-
-                for own_piece in self.pieces['w']:
-                    if own_piece.type_code in ['Q', 'P', 'R']:
-                        white_insufficient = False
-                        break
-                if white_insufficient:
-                    for opponent_piece in self.pieces['b']:
-                        if opponent_piece.type_code in ['Q', 'P', 'R']:
-                            black_insufficient = False
-                            break
-
-                if white_insufficient and black_insufficient:
+            # if draw flags not already set
+            if not move.delivering_checkmate:
+                if self._check_for_draw(player, move, made_move=True):
                     move.delivering_draw = True
-
-            # check for stalemate
-            opponent = self.get_opponent(piece.color)
-            if len(self.get_move_possibilities(opponent, check_stalemate=True)) == 0:
-                move.delivering_draw = True
-
 
             # self.chessboard.display_board()
             return True
         return False
 
-    def promote_pawn(self, pawn, promote_to):
-        """Removes the pawn from the board and replaces it with specified Piece."""
-        promotion_options = {"R": Rook, "N": Knight, "B": Bishop, "Q": Queen}
-        promotion_type = promotion_options[promote_to]
+    def get_move_possibilities(self, player, early_stop=False,
+                               set_checkmate_flag=False, set_draw_flags=False):
+        """Returning all possible moves of a player in the current state.
+        Necessary for engine moves or stalemate checks (early stopping).
+        Changing delivering_check flag and optionally also delivering_checkmate
+        or delivering_draw flag."""
+        opponent = self.get_opponent(player)
+        move_possibilites = []
+        fields = []
 
-        position = pawn.position
-        color = pawn.color
+        for row in range(8):
+            for col in range(8):
+                fields.append((row, col))
 
-        self.pieces[color].remove(pawn)
-        new_piece = promotion_type(position, color, self.chessboard)
-        self.pieces[color].append(new_piece)
+        for piece in self.pieces[player]:
+            for field in fields:
+                temp_move = Move(piece.position, field)
+                legal_move = True
+                promoted = False
 
-        return new_piece
+                if piece.move_is_pseudo_legal(temp_move):
+
+                    # make the move
+                    self._pseudo_move(temp_move, piece)
+
+                    #  if putting self in check
+                    if self._in_check(player):
+                        legal_move = False
+
+                    if legal_move:
+                        # setting move's promotion and deliver_check/checkmate flags
+                        if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
+                            for option in ['Q', 'R', 'N', 'B']:
+                                promotion_move = Move(temp_move.start_pos, temp_move.end_pos, promotion=option)
+                                promotion_move.taking_piece = temp_move.taking_piece
+
+                                new_piece = self._promote_pawn(piece, option)
+
+                                # setting check and checkmate flags
+                                if self._in_check(opponent):
+                                    promotion_move.delivering_check = True
+                                    if set_checkmate_flag and self._its_checkmate(opponent):
+                                        promotion_move.delivering_checkmate = True
+
+                                # check for draw
+                                if set_draw_flags:
+                                    if self._check_for_draw(player, promotion_move, made_move=False):
+                                        promotion_move.delivering_draw = True
+
+                                # revert promotion
+                                self.pieces[player].remove(new_piece)
+                                self.chessboard.place_on_board(piece)
+                                self.pieces[player].append(piece)
+
+                                move_possibilites.append(promotion_move)
+
+                                promoted = True
+
+                        else: # setting check and checkmate flags
+                            if self._in_check(opponent):
+                                temp_move.delivering_check = True
+                                if set_checkmate_flag and self._its_checkmate(opponent):
+                                    temp_move.delivering_checkmate = True
+
+                            if set_draw_flags:
+                                if self._check_for_draw(player, temp_move, made_move=False):
+                                    temp_move.delivering_draw = True
+
+                    # revert move
+                    piece.move(temp_move, reverse=True)
+                    if temp_move.taking_piece:
+                        temp_move.taking_piece.move(temp_move)
+                        if not temp_move.castling:
+                            self._add_to_piece_list(temp_move.taking_piece)
+
+                    if legal_move:
+                        if not promoted:
+                            move_possibilites.append(temp_move)
+                        if early_stop: # to know if at least one move possible
+                            return move_possibilites
+
+        return move_possibilites
 
     def change_turns(self):
         """Function switching player that has to move next."""
@@ -195,7 +222,72 @@ class Match():
             if piece.type_code == 'K':
                 return piece.position
 
-    def in_check(self, player):
+    def _pseudo_move(self, move, piece):
+        """Private method for code simplification. Moves the piece (changes
+        board state, piece position attribute and piece lists) and removes
+        pieces that get taken. Does not check for any rulebreaks, gameover events
+        or flags"""
+        if move.castling:
+            self._castle(move, piece)
+        else:
+            if move.taking_piece:
+                self._remove_from_piece_list(move.taking_piece)
+            piece.move(move)
+
+    def _add_to_piece_list(self, piece):
+        color = piece.color
+        if piece in self.removed_pieces[color]:
+            self.removed_pieces[color].remove(piece)
+        self.pieces[color].append(piece)
+
+    def _remove_from_piece_list(self, piece):
+        color = piece.color
+        self.pieces[color].remove(piece)
+        self.removed_pieces[color].append(piece)
+
+    def _promote_pawn(self, pawn, promote_to):
+        """Removes the pawn from the board and replaces it with specified Piece."""
+        promotion_options = {"R": Rook, "N": Knight, "B": Bishop, "Q": Queen}
+        promotion_type = promotion_options[promote_to]
+
+        position = pawn.position
+        color = pawn.color
+
+        self.pieces[color].remove(pawn)
+        new_piece = promotion_type(position, color, self.chessboard)
+        self.pieces[color].append(new_piece)
+
+        return new_piece
+
+    def _castle(self, move, king):
+        """Make move castle long or castle short."""
+
+        if self._in_check(king.color):
+            return False # castling starting in check
+
+        rook = move.taking_piece
+        new_king_position = None
+        new_rook_position = None
+        row = king.position[0]
+        move_direction = 0
+        if move.castling == 'short':
+            new_king_position = (row, 6)
+            new_rook_position = (row, 5)
+            move_direction = 1
+        else: # long
+            new_king_position = (row, 2)
+            new_rook_position = (row, 3)
+            move_direction = -1
+
+        king.move(Move(king.position, (row, king.position[1] + move_direction)))
+        if self._in_check(king.color):
+            return False # castling through check
+
+        king.move(Move(king.position, new_king_position))
+        rook.move(Move(rook.position, new_rook_position))
+        return True
+
+    def _in_check(self, player):
         """Function checking if player is in check. (king can be taken)"""
         opponent = self.get_opponent(player)
         king_pos = self.get_king_position(player)
@@ -210,8 +302,8 @@ class Match():
         # print('No checking Move was found!')
         return False # if no piece can take king
 
-    def its_checkmate(self, losing_player):
-        """Function checking if player is in checkmate. (king cant be saved).
+    def _its_checkmate(self, losing_player):
+        """Function checking if losing player is in checkmate..
         Goes through every possible move of the losing player and checks if
         ther is a move to get out of check."""
         king_pos = self.get_king_position(losing_player)
@@ -230,17 +322,11 @@ class Match():
                 legal_move = True
 
                 if piece.move_is_pseudo_legal(temp_move):
-
                     # make the move
-                    if temp_move.castling:
-                        self._castle(temp_move, piece)
-                    else:
-                        if temp_move.taking_piece:
-                            self._remove_from_piece_list(temp_move.taking_piece)
-                        piece.move(temp_move)
+                    self._pseudo_move(temp_move, piece)
 
                     # change flag if move gets loosing player out of check
-                    if not self.in_check(losing_player):
+                    if not self._in_check(losing_player):
                         still_in_check = False
 
                     # revert move
@@ -256,122 +342,81 @@ class Match():
         # no way out of check
         return True
 
-    def _add_to_piece_list(self, piece):
-        color = piece.color
-        if piece in self.removed_pieces[color]:
-            self.removed_pieces[color].remove(piece)
-        self.pieces[color].append(piece)
+    def _check_for_draw(self, player, move, made_move):
+        """Checks if a move of player ends in one of the draw scenarios"""
+        if (self._check_no_capture_draw(move, made_move) or
+            self._check_for_repetition_draw(made_move) or
+            self._check_insufficient_material() or
+            self._check_stalemating_opponent(move, player)):
+            return True
+        else:
+            return False
 
-    def _remove_from_piece_list(self, piece):
-        color = piece.color
-        self.pieces[color].remove(piece)
-        self.removed_pieces[color].append(piece)
+    def _check_no_capture_draw(self, move, made_move):
+        """Checks if there were more than 50 moves (each color) without capture"""
+        if move.taking_piece == None or move.castling:
+            if self.moves_without_capture > 98:
+                return True
+            elif made_move:
+                self.moves_without_capture += 1
+            return False
+        elif made_move:
+            if move.taking_piece and not move.castling:
+                self.moves_without_capture = 0
+        return False
 
-    def _castle(self, move, king):
-        """Make move castle long or castle short."""
+    def _check_for_repetition_draw(self, add_to_history=True):
+        """Checks if the current repetition already occured two times before
+        (threefold repetition)"""
 
-        if self.in_check(king.color):
-            return False # castling starting in check
+        current_state = self.chessboard.display_board()
+        new_position = True
+        for i in range(len(self.occured_positions)):
+            if (current_state == self.occured_positions[i][0]).all():
+                new_position = False
+                if self.occured_positions[i][1] == 2:
+                    return True
+                else:
+                    if add_to_history:
+                        self.occured_positions[i][1] += 1
+                    return False
 
-        rook = move.taking_piece
-        new_king_position = None
-        new_rook_position = None
-        row = king.position[0]
-        move_direction = 0
-        if move.castling == 'short':
-            new_king_position = (row, 6)
-            new_rook_position = (row, 5)
-            move_direction = 1
-        else: # long
-            new_king_position = (row, 2)
-            new_rook_position = (row, 3)
-            move_direction = -1
+        if new_position and add_to_history:
+            self.occured_positions.append([current_state, 1])
+        return False
 
-        king.move(Move(king.position, (row, king.position[1] + move_direction)))
-        if self.in_check(king.color):
-            return False # castling through check
-
-        king.move(Move(king.position, new_king_position))
-        rook.move(Move(rook.position, new_rook_position))
-
-        return True
-
-    def get_move_possibilities(self, player, check_stalemate=False):
+    def _check_stalemating_opponent(self, move, player):
+        """Checking if player put opponent in stalemate with last move, has to be
+        checked after setting checkmate flags"""
+        if move.delivering_check:
+            return False
 
         opponent = self.get_opponent(player)
-        move_possibilites = []
-        fields = []
+        if len(self.get_move_possibilities(opponent, early_stop=True)) == 0:
+            return True
+        else:
+            return False
 
-        for row in range(8):
-            for col in range(8):
-                fields.append((row, col))
+    def _check_insufficient_material(self):
+        """Checking if draw through insufficinet material"""
+        if len(self.pieces['w']) < 3 and len(self.pieces['b']) < 3:
+            white_insufficient = True
+            black_insufficient = True
 
-        for piece in self.pieces[player]:
-            for field in fields:
-                temp_move = Move(piece.position, field)
-                legal_move = True
-                promoted = False
+            for own_piece in self.pieces['w']:
+                if own_piece.type_code in ['Q', 'P', 'R']:
+                    white_insufficient = False
+                    break
+            if white_insufficient:
+                for opponent_piece in self.pieces['b']:
+                    if opponent_piece.type_code in ['Q', 'P', 'R']:
+                        black_insufficient = False
+                        break
 
-                if piece.move_is_pseudo_legal(temp_move):
-
-                    # make the move
-                    if temp_move.castling:
-                        self._castle(temp_move, piece)
-                    else:
-                        if temp_move.taking_piece:
-                            self._remove_from_piece_list(temp_move.taking_piece)
-                        piece.move(temp_move)
-
-                    #  if putting self in check
-                    if self.in_check(player):
-                        legal_move = False
-
-                    if legal_move:
-                        # setting move's promotion and deliver_check/checkmate flags
-                        if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
-                            for option in ['Q', 'R', 'N', 'B']:
-                                promotion_move = Move(temp_move.start_pos, temp_move.end_pos, promotion=option)
-                                promotion_move.taking_piece = temp_move.taking_piece
-
-                                new_piece = self.promote_pawn(piece, option)
-
-                                # setting check and checkmate flags
-                                if self.in_check(opponent):
-                                    promotion_move.delivering_check = True
-                                    if self.its_checkmate(opponent):
-                                        promotion_move.delivering_checkmate = True
-
-                                # revert promotion
-                                self.pieces[player].remove(new_piece)
-                                self.chessboard.place_on_board(piece)
-                                self.pieces[player].append(piece)
-
-                                move_possibilites.append(promotion_move)
-
-                                promoted = True
-
-                        else: # setting check and checkmate flags
-                            if self.in_check(opponent):
-                                temp_move.delivering_check = True
-                                if self.its_checkmate(opponent):
-                                    temp_move.delivering_checkmate = True
-
-                    # revert move
-                    piece.move(temp_move, reverse=True)
-                    if temp_move.taking_piece:
-                        temp_move.taking_piece.move(temp_move)
-                        if not temp_move.castling:
-                            self._add_to_piece_list(temp_move.taking_piece)
-
-                    if legal_move:
-                        if not promoted:
-                            move_possibilites.append(temp_move)
-
-                        if check_stalemate: # to know if at least one move possible
-                            return move_possibilites
-
-        return move_possibilites
-
+            if white_insufficient and black_insufficient:
+                return True
+            else:
+                return False
 
     @staticmethod
     def get_opponent(player):
