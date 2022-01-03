@@ -1,14 +1,19 @@
 import random
-
+import time
 class RandomEngine():
     def __init__(self):
         self.need_checkmate_flag = False
-        self.need_draw_flags = False
+        self.need_draw_flag = False
+
+        # if not set flags before move
+        self.move_test_checkmate = True
+        self.move_test_draw = True
 
     def _get_move_possibilities(self, match, current_player):
-        return match.get_move_possibilities(current_player,
+        possibilities = match.get_move_possibilities(current_player,
                                             set_checkmate_flag=self.need_checkmate_flag,
-                                            set_draw_flags=self.need_draw_flags)
+                                            set_draw_flag=self.need_draw_flag)
+        return possibilities
 
     def get_move(self, match, current_player):
         """Returning random move out of those that are possible."""

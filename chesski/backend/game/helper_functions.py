@@ -46,7 +46,8 @@ def translate_from_notation(match, move):
                     continue
 
             temp_move = Move(piece.position, (end_row, end_col))
-            if match.move_is_legal(temp_move):
+            if match.move_is_legal(temp_move, set_checkmate_flag=False,
+                                   set_draw_flag=False, revert=True):
                 piece_to_move = piece
                 possible_pieces += 1
 
@@ -93,7 +94,8 @@ def translate_to_notation(match, move):
         if other_piece == piece:
             continue
         temp_move = Move(other_piece.position, move.end_pos)
-        if other_piece.type_code == type_code and match.move_is_legal(temp_move):
+        if other_piece.type_code == type_code and match.move_is_legal(temp_move,
+                    set_checkmate_flag=False, set_draw_flag=False, revert=True):
             notation += letters[move.start_pos[1]]
             if other_piece.position[1] == piece.position[1]:
                 notation += str(move.start_pos[0] + 1)

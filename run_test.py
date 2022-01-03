@@ -19,11 +19,15 @@ from chesski.backend.engines import test_engines
 #
 # Material(+ Checkmate-filter):
 # 903.5
-# 809 / 189 / 2 --- avg: 115 Moves --- Duration: 9min 9s
+# 809 / 189 / 2 --- avg: 115 Moves --- Duration: 12min 14s
 #
 # Material(+ Checkmate-filter + Draw Avoid):
 # 934
 # 871 / 126 / 3 --- avg: 127 Moves --- Duration: 20min 58s
+#
+# Material(+ Autoqueen):
+#
+# 222 / 774 / 4 --- avg: 171 Moves --- Duration: 14min 25s
 #
 # -------------------------------------------------------------------
 #       vs. Material

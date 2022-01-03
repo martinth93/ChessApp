@@ -5,6 +5,8 @@ from chesski.backend.game.move import Move
 from chesski.backend.game.helper_functions import (translate_from_notation,
                                                    translate_to_notation)
 
+import time
+
 class Match():
     """A class setting up Board and Pieces and Managing Moves."""
 
@@ -19,7 +21,6 @@ class Match():
         if chessboard is None:
             self.chessboard = ChessBoard()
             self.initialize_pieces()
-
 
     def initialize_pieces(self):
         """Creates Instances of all necessary Chesspieces and places them on
@@ -46,42 +47,74 @@ class Match():
                                                     chessboard=self.chessboard)
                     self.pieces[color].append(new_piece)
 
-    def move_is_legal(self, move):
+    def move_is_legal(self, move, set_checkmate_flag, set_draw_flag, revert):
         """Checking a move for check-related rules by simulating the move and
         reverting it after.
-        - checking if putting yourself in check
+        Setting following flags of given move:
+
+        - delivering_check
+        - delivering_checkmate
+        - delivering_draw
         """
+
         piece = self.chessboard.return_piece_on_field(move.start_pos)
         player = piece.color
-        checking_yourself = False
+        opponent = self.get_opponent(player)
+        legal_move = True
 
         if piece.move_is_pseudo_legal(move):
+
             # make the move
             if move.castling:
                 if self._castle(move, piece) == False:
-                    checking_yourself = True
+                    legal_move = False
             else:
                 if move.taking_piece:
                     self._remove_from_piece_list(move.taking_piece)
                 piece.move(move)
 
+            if move.promotion:
+                # creating promotion piece and placing it on board (in lists)
+                new_piece = self._promote_pawn(piece, move.promotion)
+
             #  if player now in check
             if self._in_check(player):
-                checking_yourself = True
+                legal_move = False
 
-            # revert move
-            piece.move(move, reverse=True)
-            if move.taking_piece:
-                move.taking_piece.move(move)
-                if not move.castling:
-                    self._add_to_piece_list(move.taking_piece)
+            if legal_move:
 
-            if not checking_yourself:
+                if self._in_check(opponent):
+                    move.delivering_check = True
+                    if set_checkmate_flag:
+                        if self._its_checkmate(opponent):
+                            move.delivering_checkmate = True
+                if set_draw_flag:
+                    if self._check_for_draw(player, move, revert=revert):
+                        move.delivering_draw = True
+
+            if revert or not legal_move:
+                if move.promotion:
+                    # revert promotion, taking new piece of list and board, pawn back on
+                    self.pieces[player].remove(new_piece)
+                    self.chessboard.place_on_board(piece)
+                    self.pieces[player].append(piece)
+
+                # revert move
+                piece.move(move, reverse=True)
+                if move.taking_piece:
+                    move.taking_piece.move(move)
+                    if not move.castling:
+                        self._add_to_piece_list(move.taking_piece)
+            else:
+                piece.moved_once = True
+
+            if legal_move:
                 return True
 
         return False
 
-    def make_a_move(self, move, as_notation=False):
+    def make_a_move(self, move, needing_checkmate_flag=True,
+                    needing_draw_flag=True, as_notation=False):
         """
         Function handling the moves given as string in common chess notation
         or as instance of the Move class. Returning True if move is legal and
@@ -92,48 +125,23 @@ class Match():
             move = translate_from_notation(move)
 
         piece = self.chessboard.return_piece_on_field(move.start_pos)
-        player = piece.color
 
         if piece.color != self.current_player:
             raise ValueError(f"Wrong player: {self.current_player} has to move!")
 
-        if self.move_is_legal(move):
-
-            # make move
-            self._pseudo_move(move, piece)
-
-            if move.taking_piece and not move.castling:
-                self.occured_positions = [] # privious positions cant be reached
-
-            piece.moved_once = True
+        if self.move_is_legal(move, set_checkmate_flag=needing_checkmate_flag,
+                                    set_draw_flag=needing_draw_flag, revert=False):
             self.change_turns()
-
-            # if promotion -> turns pawn into promotion piece
-            if piece.type_code == 'P' and move.end_pos[0] % 7 == 0:
-                piece = self._promote_pawn(piece, move.promotion)
-
-            # set deliver_check/checkmate flags
-            if self._in_check(self.current_player):
-                move.delivering_check = True
-                if self._its_checkmate(self.current_player):
-                    move.delivering_checkmate = True
-
-            # if draw flags not already set
-            if not move.delivering_checkmate:
-                if self._check_for_draw(player, move, made_move=True):
-                    move.delivering_draw = True
-
             # self.chessboard.display_board()
             return True
         return False
 
     def get_move_possibilities(self, player, early_stop=False,
-                               set_checkmate_flag=False, set_draw_flags=False):
+                               set_checkmate_flag=False, set_draw_flag=False):
         """Returning all possible moves of a player in the current state.
         Necessary for engine moves or stalemate checks (early stopping).
         Changing delivering_check flag and optionally also delivering_checkmate
         or delivering_draw flag."""
-        opponent = self.get_opponent(player)
         move_possibilites = []
         fields = []
 
@@ -144,67 +152,26 @@ class Match():
         for piece in self.pieces[player]:
             for field in fields:
                 temp_move = Move(piece.position, field)
-                legal_move = True
-                promoted = False
 
-                if piece.move_is_pseudo_legal(temp_move):
+                if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
+                    for option in ['Q', 'R', 'N', 'B']:
+                        promotion_move = Move(temp_move.start_pos,
+                                              temp_move.end_pos,
+                                              promotion=option)
+                        if self.move_is_legal(promotion_move, set_checkmate_flag,
+                                              set_draw_flag, revert=True):
+                            move_possibilites.append(promotion_move)
 
-                    # make the move
-                    self._pseudo_move(temp_move, piece)
+                            if early_stop: # to know if at least one move possible
+                                return move_possibilites
 
-                    #  if putting self in check
-                    if self._in_check(player):
-                        legal_move = False
+                else:
 
-                    if legal_move:
-                        # setting move's promotion and deliver_check/checkmate flags
-                        if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
-                            for option in ['Q', 'R', 'N', 'B']:
-                                promotion_move = Move(temp_move.start_pos, temp_move.end_pos, promotion=option)
-                                promotion_move.taking_piece = temp_move.taking_piece
+                    if self.move_is_legal(temp_move, set_checkmate_flag,
+                                          set_draw_flag, revert=True):
 
-                                new_piece = self._promote_pawn(piece, option)
+                        move_possibilites.append(temp_move)
 
-                                # setting check and checkmate flags
-                                if self._in_check(opponent):
-                                    promotion_move.delivering_check = True
-                                    if set_checkmate_flag and self._its_checkmate(opponent):
-                                        promotion_move.delivering_checkmate = True
-
-                                # check for draw
-                                if set_draw_flags:
-                                    if self._check_for_draw(player, promotion_move, made_move=False):
-                                        promotion_move.delivering_draw = True
-
-                                # revert promotion
-                                self.pieces[player].remove(new_piece)
-                                self.chessboard.place_on_board(piece)
-                                self.pieces[player].append(piece)
-
-                                move_possibilites.append(promotion_move)
-
-                                promoted = True
-
-                        else: # setting check and checkmate flags
-                            if self._in_check(opponent):
-                                temp_move.delivering_check = True
-                                if set_checkmate_flag and self._its_checkmate(opponent):
-                                    temp_move.delivering_checkmate = True
-
-                            if set_draw_flags:
-                                if self._check_for_draw(player, temp_move, made_move=False):
-                                    temp_move.delivering_draw = True
-
-                    # revert move
-                    piece.move(temp_move, reverse=True)
-                    if temp_move.taking_piece:
-                        temp_move.taking_piece.move(temp_move)
-                        if not temp_move.castling:
-                            self._add_to_piece_list(temp_move.taking_piece)
-
-                    if legal_move:
-                        if not promoted:
-                            move_possibilites.append(temp_move)
                         if early_stop: # to know if at least one move possible
                             return move_possibilites
 
@@ -342,46 +309,52 @@ class Match():
         # no way out of check
         return True
 
-    def _check_for_draw(self, player, move, made_move):
+    def _check_for_draw(self, player, move, revert):
         """Checks if a move of player ends in one of the draw scenarios"""
-        if (self._check_no_capture_draw(move, made_move) or
-            self._check_for_repetition_draw(made_move) or
+        if (self._check_no_capture_draw(move, revert) or
+            self._check_for_repetition_draw(move, revert) or
             self._check_insufficient_material() or
             self._check_stalemating_opponent(move, player)):
             return True
         else:
             return False
 
-    def _check_no_capture_draw(self, move, made_move):
+    def _check_no_capture_draw(self, move, revert):
         """Checks if there were more than 50 moves (each color) without capture"""
         if move.taking_piece == None or move.castling:
             if self.moves_without_capture > 98:
                 return True
-            elif made_move:
+            elif not revert:
                 self.moves_without_capture += 1
             return False
-        elif made_move:
+        elif not revert:
             if move.taking_piece and not move.castling:
                 self.moves_without_capture = 0
         return False
 
-    def _check_for_repetition_draw(self, add_to_history=True):
+    def _check_for_repetition_draw(self, move, revert):
         """Checks if the current repetition already occured two times before
         (threefold repetition)"""
 
         current_state = self.chessboard.display_board()
         new_position = True
+
+        if move.taking_piece:
+            if not revert:
+                self.occured_positions = [[current_state, 1]]
+            return False
+
         for i in range(len(self.occured_positions)):
             if (current_state == self.occured_positions[i][0]).all():
                 new_position = False
                 if self.occured_positions[i][1] == 2:
                     return True
                 else:
-                    if add_to_history:
+                    if not revert:
                         self.occured_positions[i][1] += 1
                     return False
 
-        if new_position and add_to_history:
+        if new_position and not revert:
             self.occured_positions.append([current_state, 1])
         return False
 

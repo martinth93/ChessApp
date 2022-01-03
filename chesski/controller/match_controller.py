@@ -16,8 +16,12 @@ class MatchController:
         self.main_layout = None
         self.game_over = True
         self.move_count = 0
-        self.engine1 = MaterialEngine(checkmate_filter=True, avoiding_draw=False)
-        self.engine2 = RandomEngine()
+        self.engine1 = MaterialEngine(checkmate_filter=True,
+                                      avoiding_draw=True,
+                                      auto_queen=True)
+        self.engine2 = MaterialEngine(checkmate_filter=True,
+                                      avoiding_draw=True,
+                                      auto_queen=False)
         self.engine1_color = 'w'
 
     def init_match(self):
