@@ -1,3 +1,5 @@
+import numpy as np
+
 class ChessBoard():
     """A class to represent a chessboard."""
 
@@ -60,3 +62,45 @@ class ChessBoard():
                 return False
 
         return True
+
+    def display_board(self):
+        """
+        Displays the chessboard with pieces on it as numpy array in terminal.
+
+        "O" for empty white field
+        "X" for empty black field
+        "P-w" for white Pawn
+        "P-b" for black Pawn
+        "R-w" for white Rook
+        "R-b" for black Rook
+        "N-w" for white Knight
+        "N-b" for black Knight
+        "B-w" for white Bishop
+        "B-b" for black Bishop
+        "Q-w" for white Queen
+        "Q-b" for black Queen
+        "K-w" for white King
+        "K-b" for black King
+        """
+        full_board = []
+
+        for row in range(8):
+            displayed_row = []
+
+            for col in range(8):
+                displayed_as = ""
+                piece = self.state[row][col]  # get piece or None
+
+                if piece == None:
+                    if (row + col) % 2 == 0:
+                        displayed = " X "
+                    else:
+                        displayed = " O "
+                else:
+                    displayed = f"{piece.type_code}-{piece.color}"
+                displayed_row.append(displayed)
+            full_board.append(displayed_row)
+        full_board.reverse()
+
+        # print(np.array(full_board))
+        return np.array(full_board)

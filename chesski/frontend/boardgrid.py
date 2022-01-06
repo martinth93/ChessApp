@@ -7,6 +7,7 @@ class BoardGrid(GridLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.board_orientation = 'w'
         self.init_board()
 
     def init_board(self):
@@ -28,3 +29,23 @@ class BoardGrid(GridLayout):
                 row_fields.append(b)
                 self.add_widget(b)
             self.fields.insert(0, row_fields) # first row at index [0]
+
+    def get_field(self, coordinates):
+        """Returning the ui correspoinding to given coordinates"""
+        row, col = 0, 0
+        if self.board_orientation == 'w':
+            row = coordinates[0]
+            col = coordinates[1]
+        else:
+            row = 7 - coordinates[0]
+            col = 7 - coordinates[1]
+        field = self.fields[row][col]
+        return field
+
+    def rotate_boardgrid(self):
+        if self.board_orientation == 'w':
+            self.board_orientation = 'b'
+            # print('rotate')
+        else:
+            self.board_orientation = 'w'
+        return self.board_orientation
