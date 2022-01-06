@@ -142,7 +142,7 @@ class MatchController:
                     raise ValueError('couldnt place promotion piece')
 
             elif move.taking_piece:
-                self.main_layout.remove_piece(move.end_pos)
+                self.main_layout.remove_piece(move.taking_piece.position)
 
             if not move.castling and not move.promotion:
                 piece_widget = self.main_layout.get_piece_widget(move.start_pos)

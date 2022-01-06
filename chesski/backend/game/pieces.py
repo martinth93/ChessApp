@@ -6,12 +6,16 @@ class Piece():
         self.color = color
         self.type_code = ''
         self.chessboard = chessboard
-        self.moved_once = False
+        self.move_count = 0
         self.value = 0
 
         self.chessboard.place_on_board(self)
 
     def is_white(self):return self.color=='w'
+
+    def increase_move_count(self):
+        """Function to set flags for special rules, like castling or en passant"""
+        self.move_count += 1
 
     def get_position(self):
         """Returns the current position of the chess piece in chess notation."""
@@ -99,6 +103,10 @@ class Pawn(Piece):
         on_starting_row = move.start_pos[0] == ((7 + one_field) % 7)
         # boolean if pawn on starting row (1 for white/6 for black)
 
+        on_enpassant_row = move.start_pos[0] == ((7 + one_field)/2)
+        print(on_enpassant_row)
+        # boolean if pawn on en passant row (5 for white/4 for black)
+
         direction = tuple(map(lambda i, j: i - j, move.end_pos, move.start_pos))
         # how many fields up/down left/rigth
 
@@ -110,11 +118,24 @@ class Pawn(Piece):
                 # if moved one field up (if white) or down (if black)
 
             # if moved two fields up from startrow
-            elif direction[0] == 2 * one_field and on_starting_row:
+            elif on_starting_row and direction[0] == 2 * one_field:
                 if direction[1] == 0:
                     if self.chessboard.no_pieces_between(move.start_pos, move.end_pos):
                         return True
                         # returns True if no pieces between start and endposition
+
+            # en passant
+            elif on_enpassant_row:
+                if (direction == (one_field, one_field) or
+                    direction == (one_field, -one_field)):
+                    print('ok')
+                    inter_pos = (move.start_pos[0], move.start_pos[1] + direction[1])
+                    piece = self.chessboard.return_piece_on_field(inter_pos)
+                    if piece != None and piece.color != self.color and piece.move_count==1:
+                        move.taking_piece = piece
+                        print('worked')
+                        return True
+
 
         else: # if new field does have a piece on it
             if (direction == (one_field, one_field) or
@@ -122,13 +143,7 @@ class Pawn(Piece):
                return True
                # if moved one field diagonal and up
 
-            # en passant
-            elif (direction[0] == 2*one_field and on_starting_row and
-                  abs(direction[1]) == 1):
-                inter_pos = (move.start_pos[0]+2*one_field, move.start_pos[1])
-                if self.chessboard.no_pieces_between(move.start_pos, inter_pos):
-                    if move.taking_piece and move.taking_piece.type_code == 'P':
-                        return True
+
 
         # no legal move found
         raise ValueError('Move failed: Cannot move pawn like that.')
@@ -290,9 +305,9 @@ class King(Piece):
         direction = tuple(map(lambda i, j: i - j, move.end_pos, move.start_pos))
 
         if direction == (0, 3) or direction == (0, -4):
-            if move.taking_piece and not self.moved_once:
+            if move.taking_piece and self.move_count == 0:
                 if move.taking_piece.color==self.color and move.taking_piece.type_code == 'R':
-                    if not move.taking_piece.moved_once:
+                    if move.taking_piece.move_count == 0:
                         if self.chessboard.no_pieces_between(self.position, move.end_pos):
                             if direction == (0, 3):
                                 move.castling = 'short'

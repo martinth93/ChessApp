@@ -106,7 +106,7 @@ class Match():
                     if not move.castling:
                         self._add_to_piece_list(move.taking_piece)
             else:
-                piece.moved_once = True
+                piece.increase_move_count()
 
             if legal_move:
                 return True
