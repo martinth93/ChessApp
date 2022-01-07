@@ -41,11 +41,11 @@ class MainLayout(BoxLayout):
         if self.match_controller.get_current_player() == 'w':
             if self.white_engine:
                 self.white_engine_move()
-                print('white move')
+                # print('white move')
         else:
             if self.black_engine:
                 self.black_engine_move()
-                print('black move')
+                # print('black move')
 
     def white_engine_move(self):
         if not self.match_controller.game_over:
@@ -84,6 +84,7 @@ class MainLayout(BoxLayout):
         """
         Button Function to start or reset the game.
         """
+        Clock.unschedule(self.update_engine_moves)
         self.remove_all_piece_widgets()
 
         # notify the match controller to start backend-match
@@ -160,7 +161,7 @@ class MainLayout(BoxLayout):
                     else:
                         self.white_stack.add_widget(new_image)
                 return
-        raise ValueError('Piece to remove couldnt be found.')
+        raise ValueError('Piece to remove couldnt be found on ', coordinates)
 
     def handle_checkmate(self, checkmating_player):
         Clock.unschedule(self.update_engine_moves)
@@ -174,7 +175,6 @@ class MainLayout(BoxLayout):
             self.score_white += 1
         else:
             self.score_black += 1
-        time.sleep(.5)
         if self.auto_restart:
             self.start_game()
 
@@ -188,7 +188,6 @@ class MainLayout(BoxLayout):
               + '##################################################')
         self.score_white += 0.5
         self.score_black += 0.5
-        time.sleep(.5)
         if self.auto_restart:
             self.start_game()
 

@@ -1,10 +1,11 @@
 from chesski.backend.game.match import Match
 from chesski.backend.engines.random_engine import RandomEngine
 from chesski.backend.engines.material_engine import MaterialEngine
+from chesski.backend.game.helper_functions import translate_to_notation
 
 import time
 
-engine1 = MaterialEngine(checkmate_filter=False, avoiding_draw=False, auto_queen=True)
+engine1 = MaterialEngine(checkmate_filter=True, avoiding_draw=False, auto_queen=True)
 engine2 = RandomEngine()
 
 engine1_won = 0
@@ -19,13 +20,16 @@ sum_time_finding = 0
 sum_time_moving = 0
 sum_time_pseudo = 0
 
+moves = []
 
+# try:
 print('Start Testing: \n --------------------------------------------')
 for i in range(1000):
     match = Match()
     game_over = False
     move_counter = 0
     no_capture = 0
+    moves = []
     while not game_over:
         move_counter += 1
         move = None
@@ -33,6 +37,8 @@ for i in range(1000):
 
         if current_player == engine1_color:
             move = engine1.get_move(match, current_player)
+            # print(translate_to_notation(match, move))
+            moves.append((move.start_pos, move.end_pos))
 
             match.make_a_move(move, needing_checkmate_flag=engine1.move_test_checkmate,
                                     needing_draw_flag=engine1.move_test_draw)
@@ -40,22 +46,23 @@ for i in range(1000):
 
         else:
             move = engine2.get_move(match, current_player)
+            # print(translate_to_notation(match, move))
+            moves.append((move.start_pos, move.end_pos))
 
             match.make_a_move(move, needing_checkmate_flag=engine2.move_test_checkmate,
                                     needing_draw_flag=engine2.move_test_draw)
 
 
-        #print(match.chessboard.display_board())
-        # print(move_counter, match.moves_without_capture)
+
         if move.delivering_checkmate:
-            # print('Checkmate by ', current_player)
+            print('Checkmate by ', current_player)
             if current_player == engine1_color:
                 engine1_won += 1
             else:
                 engine2_won += 1
             game_over = True
         elif move.delivering_draw:
-            # print('Draw by ', current_player)
+            print('Draw by ', current_player)
             draw += 1
             game_over = True
 
@@ -72,3 +79,8 @@ for i in range(1000):
     if i == 500:
         print('###########Switching Colors#############')
         engine_1_color = 'b'
+
+# except Exception as e:
+#     print(len(moves))
+#     print(moves)
+#     print(e)

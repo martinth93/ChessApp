@@ -69,11 +69,11 @@ class MatchController:
         Also handles if a move was made on the ui-board, that is not
         allowed according to the rules implemented in the backend.
         """
-        move = Move(last_coordinates, next_coordinates)
+        move = Move(last_coordinates, next_coordinates, self.match.chessboard)
         current_player = self.get_current_player()
 
         if promote_choice:
-            move = Move(last_coordinates, next_coordinates, promote_choice)
+            move = Move(last_coordinates, next_coordinates, self.match.chessboard, promote_choice)
         current_player = self.get_current_player()
 
         try:
@@ -107,59 +107,64 @@ class MatchController:
         self.handle_move_ui_updates(engine_move, current_player, engine=True)
 
     def handle_move_ui_updates(self, move, current_player, engine=False):
-        print(move.start_pos, move.end_pos, '| promotion: ', move.promotion, ', castling: ',move.castling, ', taking: ', move.taking_piece!=None)
-        print(self.match.chessboard.display_board())
+        # print(move.start_pos, move.end_pos, '| promotion: ', move.promotion, \
+            # ', castling: ',move.castling, ', taking: ', move.taking_piece!=None, \
+            #  ', en passant: ', move.en_passant, 'position piece: ', move.piece.position)
+        # if move.taking_piece:
+            # print('remove piece position: ', move.taking_piece.position)
+            # print('remove piece color: ', move.taking_piece.color)
+        # print(self.match.chessboard.display_board())
 
-        try:
+        #try:
 
-            if self.main_layout.get_piece_widget(move.start_pos) == None:
-                raise ValueError('couldnt find piece')
+        if self.main_layout.get_piece_widget(move.start_pos) == None:
+            raise ValueError('couldnt find piece on', move.start_pos)
 
-            if move.castling:
-                rook_widget = self.main_layout.get_piece_widget(move.end_pos)
-                king_widget = self.main_layout.get_piece_widget(move.start_pos)
-                row = move.start_pos[0]
-                if move.castling == 'short':
-                    new_king_position = (row, 6)
-                    new_rook_position = (row, 5)
-                elif move.castling == 'long':
-                    new_king_position = (row, 2)
-                    new_rook_position = (row, 3)
-                rook_widget.move_to_coordinates(new_rook_position)
-                king_widget.move_to_coordinates(new_king_position)
-                # print("castled")
-            elif move.promotion:
-                if move.taking_piece:
-                    self.main_layout.remove_piece(move.end_pos)
+        if move.castling:
+            rook_widget = self.main_layout.get_piece_widget(move.end_pos)
+            king_widget = self.main_layout.get_piece_widget(move.start_pos)
+            row = move.start_pos[0]
+            if move.castling == 'short':
+                new_king_position = (row, 6)
+                new_rook_position = (row, 5)
+            elif move.castling == 'long':
+                new_king_position = (row, 2)
+                new_rook_position = (row, 3)
+            rook_widget.move_to_coordinates(new_rook_position)
+            king_widget.move_to_coordinates(new_king_position)
+            # print("castled")
+        elif move.promotion:
+            if move.taking_piece:
+                self.main_layout.remove_piece(move.end_pos)
 
-                self.main_layout.remove_piece(move.start_pos, to_stack=False)
-                type = self.get_piece_type_from_state(move.end_pos)
-                p = self.main_layout.add_piece(type, move.end_pos)
+            self.main_layout.remove_piece(move.start_pos, to_stack=False)
+            type = self.get_piece_type_from_state(move.end_pos)
+            p = self.main_layout.add_piece(type, move.end_pos)
 
-                print(p.last_coordinates)
+            # print(p.last_coordinates)
 
-                if self.main_layout.get_piece_widget(move.end_pos) == None:
-                    raise ValueError('couldnt place promotion piece')
+            if self.main_layout.get_piece_widget(move.end_pos) == None:
+                raise ValueError('couldnt place promotion piece')
 
-            elif move.taking_piece:
-                self.main_layout.remove_piece(move.taking_piece.position)
+        elif move.taking_piece:
+            self.main_layout.remove_piece(move.taking_piece.position)
 
-            if not move.castling and not move.promotion:
-                piece_widget = self.main_layout.get_piece_widget(move.start_pos)
-                piece_widget.move_to_coordinates(move.end_pos)
+        if not move.castling and not move.promotion:
+            piece_widget = self.main_layout.get_piece_widget(move.start_pos)
+            piece_widget.move_to_coordinates(move.end_pos)
 
 
-            self.move_count += 1
-            move_in_notation = translate_to_notation(self.match, move)
-            self.main_layout.update_move_text(move_in_notation,
-                                              self.move_count,
-                                              current_player)
+        self.move_count += 1
+        move_in_notation = translate_to_notation(self.match, move)
+        self.main_layout.update_move_text(move_in_notation,
+                                          self.move_count,
+                                          current_player)
 
-            if move.delivering_checkmate:
-                self.main_layout.handle_checkmate(current_player)
-            elif move.delivering_draw:
-                self.main_layout.handle_draw(current_player)
+        if move.delivering_checkmate:
+            self.main_layout.handle_checkmate(current_player)
+        elif move.delivering_draw:
+            self.main_layout.handle_draw(current_player)
 
-        except Exception as e:
-            print(e)
-            time.sleep(1000)
+        # except Exception as e:
+        #     print(e)
+        #     time.sleep(1000)
