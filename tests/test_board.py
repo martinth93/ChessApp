@@ -2,6 +2,7 @@ import unittest
 
 from chesski.backend.game.board import ChessBoard
 from chesski.backend.game.pieces import Pawn
+from chesski.backend.game.move import Move
 
 
 class TestBoardSimple(unittest.TestCase):
@@ -73,8 +74,9 @@ class TestBoardSimple(unittest.TestCase):
 class TestBoardKomplexPawn(unittest.TestCase):
 
     def _check_and_move(self, piece, end_pos):
-        if piece.move_is_legal(end_pos):
-            piece.move(end_pos)
+        move = Move(piece.position, end_pos, self.chessboard)
+        if piece.move_is_pseudo_legal(move):
+            piece.move(move)
 
     def setUp(self):
         self.chessboard = ChessBoard()

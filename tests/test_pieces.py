@@ -1,6 +1,7 @@
 import unittest
 
 from chesski.backend.game.board import ChessBoard
+from chesski.backend.game.move import Move
 
 
 class TestPiece(unittest.TestCase):
@@ -19,8 +20,9 @@ class TestPiece(unittest.TestCase):
                                  chessboard=chessboard)
 
         if piece_move:
-            if piece.move_is_legal(piece_move):
-                piece.move(new_pos=piece_move)
+            move = Move(piece.position, piece_move, chessboard)
+            if piece.move_is_pseudo_legal(move):
+                piece.move(move)
 
         generated_output = piece.display()
         self.assertEqual(piece_output, generated_output)

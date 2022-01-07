@@ -51,8 +51,8 @@ class Piece():
         -castling through check
         """
         try:
-            move.taking_piece = self.chessboard.return_piece_on_field(move.end_pos)
             self.check_moving_off_board(move)
+            move.taking_piece = self.chessboard.return_piece_on_field(move.end_pos)
             self.check_moving_on_place(move)
             self.check_taking_piece(move)
             self.check_piece_rules(move)
