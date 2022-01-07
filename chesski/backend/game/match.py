@@ -56,8 +56,7 @@ class Match():
         - delivering_checkmate
         - delivering_draw
         """
-
-        piece = self.chessboard.return_piece_on_field(move.start_pos)
+        piece = move.piece
         player = piece.color
         opponent = self.get_opponent(player)
         legal_move = True
@@ -76,6 +75,7 @@ class Match():
             if move.promotion:
                 # creating promotion piece and placing it on board (in lists)
                 new_piece = self._promote_pawn(piece, move.promotion)
+                move.piece = new_piece
 
             #  if player now in check
             if self._in_check(player):
@@ -98,15 +98,23 @@ class Match():
                     self.pieces[player].remove(new_piece)
                     self.chessboard.place_on_board(piece)
                     self.pieces[player].append(piece)
+                    move.piece = piece
 
                 # revert move
                 piece.move(move, reverse=True)
                 if move.taking_piece:
                     move.taking_piece.move(move)
+                    if move.en_passant:
+                        # adjusting piece.position if en_passant
+                        self.chessboard.remove_from_board(move.taking_piece)
+                        if move.taking_piece.color == 'w':
+                            move.taking_piece.position = (move.end_pos[0]+1,move.end_pos[1])
+                        else:
+                            move.taking_piece.position = (move.end_pos[0]-1,move.end_pos[1])
+                        self.chessboard.place_on_board(move.taking_piece)
+
                     if not move.castling:
                         self._add_to_piece_list(move.taking_piece)
-            else:
-                piece.increase_move_count()
 
             if legal_move:
                 return True
@@ -124,17 +132,25 @@ class Match():
         if as_notation:
             move = translate_from_notation(move)
 
-        piece = self.chessboard.return_piece_on_field(move.start_pos)
-
-        if piece.color != self.current_player:
+        if move.piece.color != self.current_player:
             raise ValueError(f"Wrong player: {self.current_player} has to move!")
 
         if self.move_is_legal(move, set_checkmate_flag=needing_checkmate_flag,
                                     set_draw_flag=needing_draw_flag, revert=False):
+
+
+            move.piece.increase_move_count()
+            for piece in self.pieces[self.current_player]:
+                piece.en_passantable = False
+            if move.piece.type_code == 'P' and abs(move.start_pos[0] - move.end_pos[0])==2:
+                move.piece.en_passantable = True
+
             self.change_turns()
             # self.chessboard.display_board()
             return True
-        return False
+        else:
+            return False
+
 
     def get_move_possibilities(self, player, early_stop=False,
                                set_checkmate_flag=False, set_draw_flag=False):
@@ -151,12 +167,13 @@ class Match():
 
         for piece in self.pieces[player]:
             for field in fields:
-                temp_move = Move(piece.position, field)
+                temp_move = Move(piece.position, field, self.chessboard)
 
                 if piece.type_code == 'P' and temp_move.end_pos[0] % 7 == 0:
                     for option in ['Q', 'R', 'N', 'B']:
                         promotion_move = Move(temp_move.start_pos,
                                               temp_move.end_pos,
+                                              self.chessboard,
                                               promotion=option)
                         if self.move_is_legal(promotion_move, set_checkmate_flag,
                                               set_draw_flag, revert=True):
@@ -188,6 +205,17 @@ class Match():
         for piece in self.pieces[player]:
             if piece.type_code == 'K':
                 return piece.position
+        print(player, 'has no King')
+        print(self.chessboard.display_board())
+        for piece in self.pieces['w']:
+            print(f'{piece.color} {piece.type_code} at {piece.position}')
+        for piece in self.pieces['b']:
+            print(f'{piece.color} {piece.type_code} at {piece.position}')
+        print('___________________________Removed_____________________________')
+        for piece in self.removed_pieces['w']:
+            print(f'{piece.color} {piece.type_code} at {piece.position}')
+        for piece in self.removed_pieces['b']:
+            print(f'{piece.color} {piece.type_code} at {piece.position}')
 
     def _pseudo_move(self, move, piece):
         """Private method for code simplification. Moves the piece (changes
@@ -223,6 +251,7 @@ class Match():
         self.pieces[color].remove(pawn)
         new_piece = promotion_type(position, color, self.chessboard)
         self.pieces[color].append(new_piece)
+        self.chessboard.place_on_board(new_piece)
 
         return new_piece
 
@@ -246,12 +275,12 @@ class Match():
             new_rook_position = (row, 3)
             move_direction = -1
 
-        king.move(Move(king.position, (row, king.position[1] + move_direction)))
+        king.move(Move(king.position, (row, king.position[1] + move_direction), self.chessboard))
         if self._in_check(king.color):
             return False # castling through check
 
-        king.move(Move(king.position, new_king_position))
-        rook.move(Move(rook.position, new_rook_position))
+        king.move(Move(king.position, new_king_position, self.chessboard))
+        rook.move(Move(rook.position, new_rook_position, self.chessboard))
         return True
 
     def _in_check(self, player):
@@ -261,7 +290,7 @@ class Match():
 
         # print('Checking If Move would put player in check:')
         for opponent_piece in self.pieces[opponent]:
-            temp_move = Move(opponent_piece.position, king_pos)
+            temp_move = Move(opponent_piece.position, king_pos, self.chessboard)
             if opponent_piece.move_is_pseudo_legal(temp_move):
                 # print('Checking Move was found!')
                 return True
@@ -284,7 +313,7 @@ class Match():
 
         for piece in self.pieces[losing_player]:
             for field in fields:                # check each possible move
-                temp_move = Move(piece.position, field)
+                temp_move = Move(piece.position, field, self.chessboard)
                 still_in_check = True
                 legal_move = True
 
@@ -300,8 +329,19 @@ class Match():
                     piece.move(temp_move, reverse=True)
                     if temp_move.taking_piece:
                         temp_move.taking_piece.move(temp_move)
+                        if temp_move.en_passant:
+                            self.chessboard.remove_from_board(temp_move.taking_piece)
+                            if temp_move.taking_piece.color == 'w':
+                                temp_move.taking_piece.position = (temp_move.end_pos[0]+1,temp_move.end_pos[1])
+                            else:
+                                temp_move.taking_piece.position = (temp_move.end_pos[0]-1,temp_move.end_pos[1])
+                            self.chessboard.place_on_board(temp_move.taking_piece)
+
                         if not temp_move.castling:
                             self._add_to_piece_list(temp_move.taking_piece)
+
+
+
 
                     if not still_in_check:
                         return False

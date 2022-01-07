@@ -8,6 +8,7 @@ class Piece():
         self.chessboard = chessboard
         self.move_count = 0
         self.value = 0
+        self.en_passantable = False
 
         self.chessboard.place_on_board(self)
 
@@ -41,6 +42,7 @@ class Piece():
             self.position = move.start_pos
         else:
             self.position = move.end_pos
+
         self.chessboard.place_on_board(self)
 
     def move_is_pseudo_legal(self, move):
@@ -49,6 +51,7 @@ class Piece():
         -castling through check
         """
         try:
+            move.taking_piece = self.chessboard.return_piece_on_field(move.end_pos)
             self.check_moving_off_board(move)
             self.check_moving_on_place(move)
             self.check_taking_piece(move)
@@ -70,9 +73,6 @@ class Piece():
 
     def check_taking_piece(self, move):
         """Has to be called before """
-        move.taking_piece = self.chessboard.return_piece_on_field(move.end_pos)
-        # Checking if there is a piece on move.end_pos
-
         if move.taking_piece:
             if move.taking_piece.color == self.color:
                 if self.type_code == 'K':
@@ -104,7 +104,7 @@ class Pawn(Piece):
         # boolean if pawn on starting row (1 for white/6 for black)
 
         on_enpassant_row = move.start_pos[0] == ((7 + one_field)/2)
-        print(on_enpassant_row)
+        # print(on_enpassant_row)
         # boolean if pawn on en passant row (5 for white/4 for black)
 
         direction = tuple(map(lambda i, j: i - j, move.end_pos, move.start_pos))
@@ -128,12 +128,12 @@ class Pawn(Piece):
             elif on_enpassant_row:
                 if (direction == (one_field, one_field) or
                     direction == (one_field, -one_field)):
-                    print('ok')
                     inter_pos = (move.start_pos[0], move.start_pos[1] + direction[1])
                     piece = self.chessboard.return_piece_on_field(inter_pos)
-                    if piece != None and piece.color != self.color and piece.move_count==1:
+                    if piece != None and piece.color != self.color and piece.en_passantable:
                         move.taking_piece = piece
-                        print('worked')
+                        self.chessboard.remove_from_board(piece)
+                        move.en_passant = True
                         return True
 
 

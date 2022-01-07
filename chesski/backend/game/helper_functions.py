@@ -74,7 +74,7 @@ def translate_to_notation(match, move):
         else:
             return 'O-O-O'
 
-    piece = match.chessboard.return_piece_on_field(move.end_pos)
+    piece = move.piece
     color = piece.color
 
     type_code = piece.type_code
@@ -93,7 +93,7 @@ def translate_to_notation(match, move):
     for other_piece in match.pieces[color]:
         if other_piece == piece:
             continue
-        temp_move = Move(other_piece.position, move.end_pos)
+        temp_move = Move(other_piece.position, move.end_pos, match.chessboard)
         if other_piece.type_code == type_code and match.move_is_legal(temp_move,
                     set_checkmate_flag=False, set_draw_flag=False, revert=True):
             notation += letters[move.start_pos[1]]

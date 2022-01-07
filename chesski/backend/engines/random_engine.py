@@ -1,5 +1,8 @@
 import random
 import time
+
+random.seed(3)
+
 class RandomEngine():
     def __init__(self):
         self.need_checkmate_flag = False

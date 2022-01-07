@@ -1,4 +1,4 @@
-from chesski.backend.engines import test_engines
+
 
 # Tsting Engines:
 # -1000 Games (500 White / 500 Black)
@@ -29,7 +29,7 @@ from chesski.backend.engines import test_engines
 #
 # 222 / 774 / 4 --- avg: 171 Moves --- Duration: 14min 25s
 #
-# -------------------------------------------------------------------
+# --------b-----------------------------------------------------------
 #       vs. Material
 #--------------------------------------------------------------------
 # Material(+ Checkmate-filter):
@@ -47,3 +47,5 @@ from chesski.backend.engines import test_engines
 # 513.5
 # 137 / 753 / 110 --- avg: 156 Moves --- Duration: 13min 3s
 #
+
+from chesski.backend.engines import test_engines

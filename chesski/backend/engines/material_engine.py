@@ -1,6 +1,8 @@
 import random
 import time
 
+random.seed(14)
+
 class MaterialEngine():
     def __init__(self, checkmate_filter=False, avoiding_draw=False, auto_queen=False):
         self.checkmate_filter = checkmate_filter
