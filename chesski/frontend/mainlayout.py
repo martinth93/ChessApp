@@ -29,7 +29,7 @@ class MainLayout(BoxLayout):
         self.move_after_promote = None
         self.popup = self.ids.promotion_popup
         self.auto_restart = True
-        self.speed_engine = .1 # seconds between engine moves (smallest: .06)
+        self.speed_engine = .25 # seconds between engine moves (smallest: .06)
         self.black_engine = False
         self.white_engine = False
 
