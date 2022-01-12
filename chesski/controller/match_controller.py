@@ -4,6 +4,7 @@ from chesski.backend.game.move import Move
 from chesski.backend.game.helper_functions import translate_to_notation
 
 from chesski.backend.engines.random_engine import RandomEngine
+from chesski.backend.engines.minimax import MiniMaxEngine
 from chesski.backend.engines.material_engine import MaterialEngine
 
 import time
@@ -19,9 +20,7 @@ class MatchController:
         self.engine1 = MaterialEngine(checkmate_filter=True,
                                       avoiding_draw=True,
                                       auto_queen=True)
-        self.engine2 = MaterialEngine(checkmate_filter=True,
-                                      avoiding_draw=True,
-                                      auto_queen=False)
+        self.engine2 = MiniMaxEngine(max_depth=3)
         self.engine1_color = 'w'
 
     def init_match(self):
@@ -54,13 +53,7 @@ class MatchController:
         """Return material score
         Positive: White player has pieces with more combined value.
         Negative: Black player has pieces with more combined value."""
-        score_white = 0
-        score_black = 0
-        for piece in self.match.pieces['w']:
-            score_white += piece.value
-        for piece in self.match.pieces['b']:
-            score_black += piece.value
-        return score_white - score_black
+        return self.match.evaluate_position()
 
     def move_was_possible(self, last_coordinates, next_coordinates, promote_choice=None):
         """
@@ -104,6 +97,7 @@ class MatchController:
             engine_move = self.engine2.get_move(self.match, current_player)
 
         self.match.make_a_move(engine_move)
+        print(engine_move.taking_piece)
         self.handle_move_ui_updates(engine_move, current_player, engine=True)
 
     def handle_move_ui_updates(self, move, current_player, engine=False):

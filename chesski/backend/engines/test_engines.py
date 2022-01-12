@@ -1,11 +1,12 @@
 from chesski.backend.game.match import Match
 from chesski.backend.engines.random_engine import RandomEngine
 from chesski.backend.engines.material_engine import MaterialEngine
+from chesski.backend.engines.minimax import MiniMaxEngine
 from chesski.backend.game.helper_functions import translate_to_notation
 
 import time
 
-engine1 = MaterialEngine(checkmate_filter=True, avoiding_draw=False, auto_queen=True)
+engine1 = MiniMaxEngine()
 engine2 = RandomEngine()
 
 engine1_won = 0
@@ -24,7 +25,7 @@ moves = []
 
 # try:
 print('Start Testing: \n --------------------------------------------')
-for i in range(1000):
+for i in range(1):
     match = Match()
     game_over = False
     move_counter = 0

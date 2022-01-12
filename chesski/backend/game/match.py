@@ -21,6 +21,15 @@ class Match():
         if chessboard is None:
             self.chessboard = ChessBoard()
             self.initialize_pieces()
+        else:
+            self.chessboard = chessboard
+            for row in self.chessboard.state:
+                for piece in row:
+                    if piece != None:
+                        if piece.color == 'w':
+                            self.pieces['w'].append(piece)
+                        else:
+                            self.pieces['b'].append(piece)
 
     def initialize_pieces(self):
         """Creates Instances of all necessary Chesspieces and places them on
@@ -200,6 +209,14 @@ class Match():
             self.current_player = "b"
         else:
             self.current_player = "w"
+
+    def evaluate_position(self):
+        material_difference = 0
+        for piece in self.pieces['w']:
+            material_difference += piece.value
+        for piece in self.pieces['b']:
+            material_difference -= piece.value
+        return material_difference
 
     def get_king_position(self, player):
         for piece in self.pieces[player]:
