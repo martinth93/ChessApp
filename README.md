@@ -15,12 +15,11 @@ The purpose of this Application is to introduce myself to software development, 
 
 ## 2. Overall Description
 ### 2.1 Product Perspective
-+ Chess Board:
++ **Chess Board:**
   The Application will show a complete chessboard with all regular white and black chesspieces. Pieces can be moved according to the rules of the game. If one player wins, the game will be restarted.
-+ Game Score:
++ **Game Score:**
   It includes a score, showing which player has performed better since the start of the application.
-  
-+ Game Hiytory:
++ **Game Hiytory:**
   All moves that were made in one game will be shown in common chess notation.
 
 
