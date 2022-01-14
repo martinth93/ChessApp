@@ -1,7 +1,7 @@
 # ChessApp
 ![ChessApp](graphics/ChessApp.png)
 
-# Software Requirements Specification
+# Software Requirements Specification (mini-Version)
 ## 1. Introduction
 ### 1.1 Purpose
 The purpose of this document is to build an application to play chess on a computer or phone against yourself or an engine.
