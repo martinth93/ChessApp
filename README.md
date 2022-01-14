@@ -34,8 +34,8 @@ The purpose of this Application is to introduce myself to software development, 
 + Making a move
 + Choosing an engine difficulty
   + Difficulty 1: Random Moves
-+ + Difficulty 2: Material-greedy Moves
-+ + Difficulty 3: Moves calculated with minimax algorithm (+alpha-beta pruning) with depth of 4
+  + Difficulty 2: Material-greedy Moves
+  + Difficulty 3: Moves calculated with minimax algorithm (+alpha-beta pruning) with depth of 4
 + Rotating the board
 + Restarting the game
 
