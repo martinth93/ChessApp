@@ -33,7 +33,7 @@ The purpose of this Application is to introduce myself to software development, 
 ### 2.3 User Functions
 + Making a move
 + Choosing an engine difficulty
-++ Difficulty 1: Random Moves
+  + Difficulty 1: Random Moves
 + + Difficulty 2: Material-greedy Moves
 + + Difficulty 3: Moves calculated with minimax algorithm (+alpha-beta pruning) with depth of 4
 + Rotating the board
