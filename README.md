@@ -34,10 +34,10 @@ The purpose of this Application is to introduce myself to software development, 
 + Making a move
 + Choosing an engine difficulty
 + Rotating the board
-+ Resstarting a game
++ Restarting the game
 
 ### 2.4 Operating Environment
-+ client system
++ Client system
 + Operating system: Windows, Linux, Android
 
 ### 2.5 Product Design annd Implementation.
