@@ -44,4 +44,4 @@ The purpose of this Application is to introduce myself to software development, 
 + Operating system: Windows, Linux, Android
 
 ### 2.5 Product Design and Implementation
-The frontend-design will be a simple GUI-Implementation in a model-View-Controller(MVC) Pattern with kivy. Implementation of all the functionality at backend will be from scratch and without checking for solutions other developers used to implement a chess game. Its main purpose is practice of the in 1.3 mentioned Topics, so it won't be optimised regarding computation speed and engine quality.
+The frontend-design will be a simple GUI-Implementation in a Model-View-Controller(MVC) Pattern with kivy. Implementation of all the functionality at backend will be from scratch and without checking for solutions other developers used to implement a chess game. Its main purpose is practice of the in 1.3 mentioned topics, so it won't be optimised regarding computation speed and engine quality.
